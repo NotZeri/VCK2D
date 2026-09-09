@@ -468,7 +468,7 @@ class Vehicle {
     this.angularVelocity += yawInput * 1.5 * dt;
     this.angularVelocity *= 0.96;
 
-    const maxSpeed = 125;
+    const maxSpeed = 1000;
     const sp = Math.sqrt(this.velocity.x**2 + this.velocity.y**2);
     if (sp > maxSpeed) {
       this.velocity.x = (this.velocity.x / sp) * maxSpeed;
