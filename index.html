@@ -521,7 +521,7 @@ class Vehicle {
       }
     }
 
-    if (Math.abs(this.position.x) > 350) { this.position.x = Math.sign(this.position.x) * 350; this.velocity.x = -this.velocity.x * 0.3; }
+    // if (Math.abs(this.position.x) > 350) { this.position.x = Math.sign(this.position.x) * 350; this.velocity.x = -this.velocity.x * 0.3; }
     if (this.fuel < 0) this.fuel = 0;
   }
 }
