@@ -1,8 +1,78 @@
+<!--
+Made by:
+lunch(forgot his name lowkey)
+NotZeri(ellodeez)
+
+Tested by:
+cookie(jacob)
+dabritishcamel786
+
+
+GUI:
+Inspired by KSP so NO its not fucking ai slop GUI
+
+Game:
+Vehicle Construction Kit :)
+But its called VFK(Vehicle Forge Kit)
+
+Changelog:
+NotZeri: Changed the name because people think as soon as there is a em dash it's AI
+lunch:   idk and idc
+-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>VFK — Vehicle Forge Kit</title>
+<title>VFK - Vehicle Forge Kit</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -100,7 +170,7 @@
 
 <div id="build-ui" class="ui">
   <div class="panel">
-    <div class="panel-header"><div class="title">PARTS PALETTE</div></div>
+    <div class="panel-header"><div class="title">PARTS PALLET</div></div>
     <div class="panel-content">
       <div class="parts-grid" id="parts-grid"></div>
       <div class="info-box">
@@ -110,10 +180,10 @@
       <div class="rotate-hint"><span class="key">Drag L-Click</span> Fill &nbsp; <span class="key">Drag R-Click</span> Delete</div>
       <div class="rotate-hint"><span class="key">R</span> rotate</div>
       <div class="stats">
-        <div class="stat-row">Mass: <span id="stat-mass">0.0</span></div>
-        <div class="stat-row">Fuel Cap: <span id="stat-fuel">0</span></div>
-        <div class="stat-row">Parts: <span id="stat-parts">0</span></div>
-        <div class="stat-row">Cockpit: <span id="stat-cockpit">No</span></div>
+        <div class="stat-row">Mass Total: <span id="stat-mass">0.0</span></div>
+        <div class="stat-row">Fuel Cap Total: <span id="stat-fuel">0</span></div>
+        <div class="stat-row">Parts Total: <span id="stat-parts">0</span></div>
+        <div class="stat-row">Cockpit Total: <span id="stat-cockpit">No</span></div>
       </div>
       <button class="big-btn" id="launch-btn">ENTER WORLD ▶</button>
       <button class="big-btn warm" id="clear-btn">CLEAR ALL</button>
@@ -266,7 +336,7 @@ let keys = {};
 let particles = [];
 let stars = [], clouds = [];
 let time = 0;
-let debris = []; // Array for disconnected vehicle parts debedbebdebdbebdbe
+let debris = []; // disosnseooncenofoeifsruigiuerbigiuerubigueirgbuieubirgbuieubirgbuieuibriugbeuibrugibebuirbuigeuibriugenctors
 let nextDisconnectorId = 1;
 
 // Advanced Building Vars
@@ -777,7 +847,7 @@ function enterWorld() {
   if (!vehicle.hasCockpit) { showToast('Cockpit required!'); return; }
   gameMode = 'play';
   vehicle.resetToGrid();
-  debris = []; // Clear debris from previous runs
+  debris = []; // no more debebe
   player.x = 4; player.y = 18; player.vx = 0; player.vy = 0; player.inVehicle = null;
   document.getElementById('build-ui').style.display = 'none';
   document.getElementById('play-ui').style.display = 'block';
@@ -1157,7 +1227,9 @@ function drawVehicle() {
     }
   }
 
-  // Draw disconnected debris vehicles
+  // drawing the conenctor parts
+ // stop talking like your a baby you idiot
+ // mb
   for (const d of debris) {
     for (const part of d.parts) {
       const pw = d.getPartWorld(part);
