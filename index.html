@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>VEHICLE FORGE — Industrial Sandbox</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#1a1a1f; color:#e8e8e8;
+    font-family:'JetBrains Mono', monospace;
+    overflow:hidden; user-select:none; -webkit-user-select:none;
+  }
+  canvas { display:block; position:fixed; top:0; left:0; image-rendering:pixelated; }
+  .ui { position:fixed; z-index:10; pointer-events:none; }
+  .ui > * { pointer-events:auto; }
+  
+  .panel {
+    background:#2b2b35; border:3px solid #111118;
+    border-radius:2px; padding:0; box-shadow:6px 6px 0px #111118;
+  }
+  .panel-header {
+    background: repeating-linear-gradient(45deg, #ffcc00, #ffcc00 10px, #111118 10px, #111118 20px);
+    padding: 4px; border-bottom: 3px solid #111118;
+  }
+  .panel-content { padding: 16px; }
+
+  #build-ui { top:18px; left:18px; width:240px; max-height:calc(100vh - 120px); overflow-y:auto; }
+  
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: #1a1a1f; }
+  ::-webkit-scrollbar-thumb { background: #4a4a55; border:1px solid #111118; }
+
+  .title { font-family:'Oswald', sans-serif; font-size:18px; font-weight:700; letter-spacing:2px; color:#111118; text-transform:uppercase; }
+  
+  .parts-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:12px; }
+  .part-btn {
+    background:#3a3a45; border:2px solid #111118; color:#aaa;
+    padding:8px 4px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    font-size:10px; font-weight:700; text-transform:uppercase;
+    transition:all .1s;
+  }
+  .part-btn:hover { background:#4a4a55; color:#fff; transform:translate(-2px,-2px); box-shadow:4px 4px 0px #111118; }
+  .part-btn.active { background:#ffcc00; color:#111118; border-color:#111118; box-shadow:4px 4px 0px #111118; }
+  .part-icon { width:30px; height:30px; display:flex; align-items:center; justify-content:center; }
+  
+  .info-box { margin-top:12px; padding:8px; background:#1a1a1f; border:2px solid #111118; font-size:11px; }
+  .selected-name { color:#ffcc00; font-weight:700; margin-bottom:3px; font-size:13px; text-transform:uppercase; font-family:'Oswald',sans-serif; letter-spacing:1px; }
+  .selected-desc { color:#888; font-size:10px; line-height:1.4; }
+  .rotate-hint { margin-top:10px; font-size:10px; color:#777; text-align:center; }
+  .rotate-hint span { color:#ffcc00; font-weight:700; }
+  
+  .stats { margin-top:12px; padding-top:12px; border-top:2px dashed #4a4a55; font-size:11px; }
+  .stat-row { display:flex; justify-content:space-between; margin-bottom:5px; color:#aaa; text-transform:uppercase; }
+  .stat-row span { color:#fff; font-weight:700; }
+  
+  .big-btn {
+    display:block; width:100%; margin-top:12px; padding:12px;
+    background:#3a3a45; color:#fff; border:2px solid #111118;
+    font-family:'Oswald', sans-serif; font-size:15px; font-weight:700;
+    letter-spacing:2px; cursor:pointer; text-transform:uppercase;
+    box-shadow:4px 4px 0px #111118; transition:all .1s;
+  }
+  .big-btn:hover { background:#4a4a55; transform:translate(-2px,-2px); box-shadow:6px 6px 0px #111118; }
+  .big-btn:active { transform:translate(2px,2px); box-shadow:0px 0px 0px #111118; }
+  .big-btn.warm { background:#e85a20; color:#111118; }
+  .big-btn.warm:hover { background:#ff7040; }
+  
+  #play-ui { top:18px; left:18px; width:260px; }
+  .hud-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:9px; font-size:12px; text-transform:uppercase; }
+  .hud-label { color:#888; letter-spacing:1.5px; font-weight:600; font-size:10px; }
+  .hud-value { font-weight:700; color:#ffcc00; font-size:14px; font-family:'JetBrains Mono',monospace; }
+  .fuel-bar { width:100%; height:20px; background:#1a1a1f; border:2px solid #111118; overflow:hidden; margin-top:2px; margin-bottom:10px; }
+  .fuel-fill { height:100%; background: repeating-linear-gradient(45deg, #ffcc00, #ffcc00 10px, #e8a800 10px, #e8a800 20px); transition:width .1s; }
+  .zone-display { text-align:center; margin-top:4px; padding:8px; font-size:13px; letter-spacing:2.5px; font-weight:700; border:2px solid #111118; background:#1a1a1f; color:#fff; font-family:'Oswald',sans-serif; }
+  
+  .enter-prompt { text-align:center; margin-top:8px; padding:8px; font-size:11px; letter-spacing:1.5px; font-weight:700; background:#3aaa20; color:#fff; border:2px solid #111118; display:none; }
+  .enter-prompt.show { display:block; animation: blink 0.8s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0.5; } }
+  
+  #alt-scale { position:fixed; right:18px; top:50%; transform:translateY(-50%); width:110px; height:340px; z-index:10; display:none; }
+  .scale-bar { width:100%; height:100%; background:#2b2b35; border:3px solid #111118; box-shadow:6px 6px 0px #111118; position:relative; }
+  .scale-track { position:absolute; left:20px; top:20px; bottom:20px; width:4px; background:#1a1a1f; border:1px solid #4a4a55; transform: translateX(-1px); }
+  .scale-marker { position:absolute; left:18px; width:10px; height:3px; background:#ffcc00; border:1px solid #111118; transform: translate(-1px, -50%); }
+  .scale-label { position:absolute; left:36px; font-size:10px; color:#aaa; white-space:nowrap; font-weight:700; text-transform:uppercase; transform: translateY(-50%); }
+  .scale-indicator { position:absolute; left:12px; width:16px; height:16px; background:#e85a20; border:2px solid #111118; border-radius:50%; transform: translate(-1px, -50%); transition:top .15s; }
+  
+  #controls-help { bottom:18px; left:50%; transform:translateX(-50%); }
+  .help-text { background:#2b2b35; border:3px solid #111118; box-shadow:6px 6px 0px #111118; padding:10px 20px; font-size:11px; color:#aaa; font-weight:700; text-transform:uppercase; text-align:center; }
+  .help-text strong { color:#ffcc00; }
+  .key { display:inline-block; padding:3px 8px; margin:0 3px; background:#1a1a1f; border:2px solid #4a4a55; color:#fff; font-size:10px; box-shadow:2px 2px 0px #111118; }
+  
+  #toast { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#e85a20; color:#111118; border:3px solid #111118; padding:12px 24px; font-family:'Oswald',sans-serif; font-size:16px; font-weight:700; letter-spacing:1px; opacity:0; transition:opacity .2s; z-index:100; pointer-events:none; box-shadow:6px 6px 0px #111118; }
+  #toast.show { opacity:1; }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<div id="build-ui" class="ui">
+  <div class="panel">
+    <div class="panel-header"><div class="title">PARTS PALETTE</div></div>
+    <div class="panel-content">
+      <div class="parts-grid" id="parts-grid"></div>
+      <div class="info-box">
+        <div class="selected-name" id="selected-name">Hull</div>
+        <div class="selected-desc" id="selected-desc">Light structural block</div>
+      </div>
+      <div class="rotate-hint"><span class="key">R</span> rotate &nbsp; <span class="key">R-Click</span> delete</div>
+      <div class="stats">
+        <div class="stat-row">Mass: <span id="stat-mass">0.0</span></div>
+        <div class="stat-row">Fuel Cap: <span id="stat-fuel">0</span></div>
+        <div class="stat-row">Parts: <span id="stat-parts">0</span></div>
+        <div class="stat-row">Cockpit: <span id="stat-cockpit">No</span></div>
+      </div>
+      <button class="big-btn" id="launch-btn">ENTER WORLD ▶</button>
+      <button class="big-btn warm" id="clear-btn">CLEAR ALL</button>
+    </div>
+  </div>
+</div>
+
+<div id="play-ui" class="ui" style="display:none;">
+  <div class="panel">
+    <div class="panel-header"><div class="title">FLIGHT DATA</div></div>
+    <div class="panel-content">
+      <div class="hud-row"><span class="hud-label">Altitude</span><span class="hud-value"><span id="altitude">0</span> m</span></div>
+      <div class="hud-row"><span class="hud-label">Speed</span><span class="hud-value"><span id="speed">0</span> m/s</span></div>
+      <div class="hud-row"><span class="hud-label">Fuel</span><span class="hud-value"><span id="fuel-pct">100</span>%</span></div>
+      <div class="fuel-bar"><div class="fuel-fill" id="fuel-fill" style="width:100%"></div></div>
+      <div class="zone-display" id="zone">SURFACE</div>
+      <div class="enter-prompt" id="enter-prompt">PRESS F TO ENTER VEHICLE</div>
+      <button class="big-btn warm" id="edit-btn">◀ EDIT VEHICLE</button>
+    </div>
+  </div>
+</div>
+
+<div id="alt-scale">
+  <div class="scale-bar">
+    <div class="scale-track"></div>
+    
+    <div class="scale-marker" style="top:20px"></div>
+    <div class="scale-label" style="top:20px">SPACE</div>
+    
+    <div class="scale-marker" style="top:87px"></div>
+    <div class="scale-label" style="top:87px">STRATO</div>
+    
+    <div class="scale-marker" style="top:220px"></div>
+    <div class="scale-label" style="top:220px">TROPO</div>
+    
+    <div class="scale-marker" style="top:270px"></div>
+    <div class="scale-label" style="top:270px">HIGH</div>
+    
+    <div class="scale-marker" style="top:320px"></div>
+    <div class="scale-label" style="top:320px">SURFACE</div>
+    
+    <div class="scale-indicator" id="scale-indicator" style="top:320px"></div>
+  </div>
+</div>
+
+<div id="controls-help" class="ui">
+  <div class="help-text" id="build-help">
+    <strong>BUILD:</strong> <span class="key">Click</span> place &nbsp; <span class="key">R-Click</span> delete &nbsp; <span class="key">R</span> rotate &nbsp; <span class="key">A</span><span class="key">D</span> pan
+  </div>
+  <div class="help-text" id="play-help" style="display:none;">
+    <strong>ON FOOT:</strong> <span class="key">A</span><span class="key">D</span> walk &nbsp; <span class="key">W</span> jump &nbsp; <span class="key">F</span> enter veh
+    <br><strong>IN VEHICLE:</strong> <span class="key">W</span><span class="key">S</span> drive/thrust &nbsp; <span class="key">A</span><span class="key">D</span> rotate &nbsp; <span class="key">F</span> exit
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let DPR = window.devicePixelRatio || 1;
+function resize(){
+  DPR = window.devicePixelRatio || 1;
+  canvas.width = window.innerWidth * DPR;
+  canvas.height = window.innerHeight * DPR;
+  canvas.style.width = window.innerWidth+'px';
+  canvas.style.height = window.innerHeight+'px';
+}
+window.addEventListener('resize', resize);
+resize();
+
+const WORLD = {
+  gravity: 16, waterLevel: 0, spaceStart: 4500,
+  atmosphereHeight: 6000, seaFloor: -60, airScaleHeight: 2200, airDensity0: 1.4,
+};
+
+const ISLANDS = [
+  { cx: 0,    w: 55, h: 13 },
+  { cx: 55,   w: 22, h: 5  },
+  { cx: 135,  w: 70, h: 18 },
+  { cx: 235,  w: 25, h: 4  },
+  { cx: -90,  w: 35, h: 8  },
+  { cx: -165, w: 30, h: 6  },
+];
+
+function islandHeight(cx, w, maxH, x) {
+  const dx = Math.abs(x - cx);
+  if (dx >= w/2) return -Infinity;
+  const t = dx / (w/2);
+  return maxH * Math.cos(t * Math.PI / 2);
+}
+
+function getGroundHeight(x) {
+  let h = WORLD.seaFloor;
+  for (const isl of ISLANDS) {
+    const ih = islandHeight(isl.cx, isl.w, isl.h, x);
+    if (ih > h) h = ih;
+  }
+  return h;
+}
+
+const DOCK = { x1: 24, x2: 46, y: 1.5 };
+
+function getSurfaceHeight(x) {
+  let h = getGroundHeight(x);
+  if (x >= DOCK.x1 && x <= DOCK.x2) h = Math.max(h, DOCK.y);
+  return h;
+}
+
+const decor = [];
+for (const isl of ISLANDS) {
+  const nTrees = Math.floor(isl.w / 7);
+  for (let i = 0; i < nTrees; i++) {
+    const tx = isl.cx + (Math.random() - 0.5) * isl.w * 0.65;
+    const ty = islandHeight(isl.cx, isl.w, isl.h, tx);
+    if (ty > 2.5) decor.push({ type: 'tree', x: tx, y: ty, size: 0.5 + Math.random() * 0.5 });
+  }
+  for (let i = 0; i < 4; i++) {
+    const rx = isl.cx + (Math.random() - 0.5) * isl.w * 0.8;
+    const ry = islandHeight(isl.cx, isl.w, isl.h, rx);
+    if (ry > 1) decor.push({ type: 'rock', x: rx, y: ry, size: 0.25 + Math.random() * 0.35 });
+  }
+}
+for (let i = 0; i < 18; i++) decor.push({ type: 'seaweed', x: (Math.random() - 0.5) * 350, y: WORLD.seaFloor, size: 1 + Math.random() * 2.5 });
+
+const PART_DEFS = {
+  hull:      { name:'Hull',      mass:1.5, color:'#7a7a85', edge:'#3a3a45', desc:'Light structural block' },
+  armor:     { name:'Armor',     mass:4.0, color:'#454555', edge:'#1a1a20', desc:'Heavy, durable block' },
+  wheel:     { name:'Wheel',     mass:1.0, color:'#1a1a1a', edge:'#444',    desc:'Rolls on ground & water' },
+  thruster:  { name:'Thruster',  mass:1.0, color:'#e85a20', edge:'#a83410', thrust:180, fuelUse:4, desc:'Rocket engine (uses fuel)' },
+  fuel:      { name:'Fuel Tank', mass:1.5, color:'#e8c020', edge:'#a88010', fuelCap:100, desc:'Stores fuel for engines' },
+  cockpit:   { name:'Cockpit',   mass:1.5, color:'#20d0e8', edge:'#1080a0', desc:'Control center (required)' },
+  propeller: { name:'Propeller', mass:1.0, color:'#3080e8', edge:'#1040a0', thrust:120, fuelUse:2, waterOnly:true, desc:'Water propulsion only' },
+  wing:      { name:'Wing',      mass:0.8, color:'#c0c8d0', edge:'#707880', liftCoef:2.5, desc:'Generates lift in air' },
+  buoyancy:  { name:'Buoyancy',  mass:0.5, color:'#20e8b0', edge:'#10a080', volume:6, desc:'Floats in water (submarines)' },
+  fin:       { name:'Fin',       mass:0.5, color:'#d0d8e0', edge:'#808890', dragCoef:3.5, desc:'Stabilizes movement' },
+};
+
+let gameMode = 'build';
+let selectedPart = 'hull';
+let partRotation = 0;
+let camera = { x:0, y:17, zoom:28 };
+let mouse = { sx:0, sy:0, wx:0, wy:0, gx:0, gy:0 };
+let keys = {};
+let particles = [];
+let stars = [], clouds = [];
+let time = 0;
+
+for (let i = 0; i < 500; i++) stars.push({ x:(Math.random()-0.5)*800, y:3500+Math.random()*6000, size:Math.random()*0.06+0.02, brightness:Math.random()*0.6+0.4, twinkle:Math.random()*Math.PI*2, twinkleSpeed:0.5+Math.random()*2 });
+for (let i = 0; i < 70; i++) clouds.push({ x:(Math.random()-0.5)*500, y:200+Math.random()*2500, w:5+Math.random()*10, h:1.2+Math.random()*1.5, drift:(Math.random()-0.5)*0.3 });
+
+const player = { x: 4, y: 18, vx: 0, vy: 0, size: 0.7, onGround: false, inWater: false, inVehicle: null, facing: 1, walkPhase: 0 };
+
+class Vec2 { 
+  constructor(x=0, y=0){ this.x=x; this.y=y; } 
+  set(x, y) { this.x = x; this.y = y; return this; }
+}
+
+class Vehicle {
+  constructor() {
+    this.parts = [];
+    this.activated = false; this.active = false;
+    this.position = new Vec2(0, 0); 
+    this.velocity = new Vec2(0, 0);
+    this.angle = 0; 
+    this.angularVelocity = 0;
+    this.fuel = 0; this.maxFuel = 0; this.mass = 0; this.inertia = 0;
+    this.thrustVisual = 0; this.hasCockpit = false;
+    this.centerOfMass = new Vec2(0, 0);
+  }
+
+  addPart(type, gx, gy, rot) {
+    if (this.parts.some(p => p.gx === gx && p.gy === gy)) return false;
+    const def = PART_DEFS[type];
+    this.parts.push({
+      type, gx, gy, rot, mass: def.mass, color: def.color, edge: def.edge,
+      thrust: def.thrust || 0, fuelUse: def.fuelUse || 0,
+      fuelCap: def.fuelCap || 0, liftCoef: def.liftCoef || 0,
+      volume: def.volume || 0, dragCoef: def.dragCoef || 0,
+      waterOnly: def.waterOnly || false, localX: 0, localY: 0,
+    });
+    this.recalc();
+    return true;
+  }
+
+  removePart(gx, gy) {
+    this.parts = this.parts.filter(p => !(p.gx === gx && p.gy === gy));
+    this.recalc();
+  }
+
+  recalc() {
+    this.mass = 0; this.maxFuel = 0; this.hasCockpit = false;
+    for (const p of this.parts) {
+      this.mass += p.mass;
+      if (p.fuelCap) this.maxFuel += p.fuelCap;
+      if (p.type === 'cockpit') this.hasCockpit = true;
+    }
+    if (this.fuel === 0 && this.maxFuel > 0) this.fuel = this.maxFuel;
+  }
+
+  activate() {
+    let cx = 0, cy = 0, totalMass = 0;
+    for (const p of this.parts) { 
+      cx += p.gx * p.mass; 
+      cy += p.gy * p.mass; 
+      totalMass += p.mass; 
+    }
+    if (totalMass > 0) { cx /= totalMass; cy /= totalMass; }
+    
+    this.centerOfMass.x = cx;
+    this.centerOfMass.y = cy;
+    
+    this.inertia = 0;
+    for (const p of this.parts) {
+      p.localX = p.gx - cx; 
+      p.localY = p.gy - cy;
+      this.inertia += p.mass * (p.localX*p.localX + p.localY*p.localY + 0.34);
+    }
+    this.activated = true;
+    
+    this.position = new Vec2(cx, cy); 
+    this.velocity = new Vec2(0, 0); 
+    this.angularVelocity = 0;
+    this.angle = 0;
+    this.fuel = this.maxFuel; 
+    this.active = true;
+  }
+
+  deactivate() { this.active = false; this.velocity = new Vec2(0, 0); this.angularVelocity = 0; }
+  resetToGrid() { this.activated = false; this.active = false; this.position = new Vec2(0, 0); this.angle = 0; this.velocity = new Vec2(0, 0); this.angularVelocity = 0; }
+
+  getPartWorld(part) {
+    if (!this.activated) return { x: part.gx, y: part.gy, rot: (part.rot || 0) * Math.PI / 2 };
+    const c = Math.cos(this.angle), s = Math.sin(this.angle);
+    return {
+      x: this.position.x + (part.localX * c - part.localY * s),
+      y: this.position.y + (part.localX * s + part.localY * c),
+      rot: this.angle + (part.rot || 0) * Math.PI / 2,
+    };
+  }
+
+  update(dt) {
+    if (!this.active || this.parts.length === 0) return;
+
+    const altFactor = Math.max(0, 1 - this.position.y / WORLD.atmosphereHeight);
+    let Fx = 0, Fy = -WORLD.gravity * this.mass * altFactor; 
+    let T = 0; 
+    const c = Math.cos(this.angle), s = Math.sin(this.angle);
+
+    const fwdX = c; 
+    const fwdY = s;  
+
+    const thrustInput = (keys['w'] || keys['arrowup'] ? 1 : 0) - (keys['s'] || keys['arrowdown'] ? 1 : 0);
+    const yawInput = (keys['a'] || keys['arrowleft'] ? 1 : 0) - (keys['d'] || keys['arrowright'] ? 1 : 0);
+    const boost = keys['shift'] ? 1.8 : 1;
+
+    for (const part of this.parts) {
+      if (part.type === 'thruster' || part.type === 'propeller') {
+        const pw = this.getPartWorld(part);
+        const isInWater = pw.y < 0.2; 
+        if (part.waterOnly && !isInWater) continue;
+
+        if (thrustInput !== 0 && this.fuel > 0) {
+          let pAngle = (part.rot || 0) * Math.PI / 2;
+
+          const lx = -Math.sin(pAngle); 
+          const ly = Math.cos(pAngle);  
+          
+          const wx = lx * c - ly * s;
+          const wy = lx * s + ly * c;
+          
+          const tp = part.thrust * thrustInput * boost;
+          Fx += wx * tp; 
+          Fy += wy * tp;
+          
+          const rx = part.localX * c - part.localY * s;
+          const ry = part.localX * s + part.localY * c;
+          T += (rx * wy - ry * wx);
+          
+          this.fuel -= part.fuelUse * Math.abs(thrustInput) * boost * dt;
+          this.thrustVisual = 1;
+
+          if (Math.random() < 0.7) {
+            const exAngle = pAngle + this.angle; 
+            particles.push({
+              x: pw.x + Math.sin(exAngle)*0.5 + (Math.random()-0.5)*0.2,
+              y: pw.y - Math.cos(exAngle)*0.5 + (Math.random()-0.5)*0.2,
+              vx: Math.sin(exAngle)*(5+Math.random()*3) + (Math.random()-0.5)*2 - this.velocity.x*0.3,
+              vy: -Math.cos(exAngle)*(5+Math.random()*3) + (Math.random()-0.5)*2 - this.velocity.y*0.3,
+              life: 0.4+Math.random()*0.3, maxLife: 0.7, size: 0.18+Math.random()*0.15,
+              color: part.type === 'propeller' ? '#80c0ff' : (Math.random()<0.3 ? '#ffcc40' : '#ff5020'),
+            });
+          }
+        }
+      }
+    }
+    this.thrustVisual *= 0.85;
+
+    const speed = Math.sqrt(this.velocity.x**2 + this.velocity.y**2);
+    const airDensity = Math.max(0, WORLD.airDensity0 * Math.exp(-this.position.y / WORLD.airScaleHeight));
+    const waterFactor = this.position.y < 0 ? 12 : 1; 
+    
+    for (const part of this.parts) {
+      if (part.type === 'wing' && this.position.y > 0) {
+        const pAngle = (part.rot || 0) * Math.PI / 2;
+        const wingForwardX = Math.cos(pAngle), wingForwardY = Math.sin(pAngle);
+        const localVx = this.velocity.x*c + this.velocity.y*s;
+        const localVy = -this.velocity.x*s + this.velocity.y*c;
+        
+        const fwdSpeed = localVx * wingForwardX + localVy * wingForwardY;
+        const liftForce = part.liftCoef * fwdSpeed * Math.abs(fwdSpeed) * airDensity * 0.5;
+        const liftX = -Math.sin(pAngle), liftY = Math.cos(pAngle);
+        const lwx = liftX*c - liftY*s, lwy = liftX*s + liftY*c;
+        Fx += lwx * liftForce * 0.5; Fy += lwy * liftForce * 0.5;
+        T += (part.localX * lwy - part.localY * lwx) * liftForce * 0.5;
+      }
+      
+      if (part.type === 'fin') {
+        const localVx = this.velocity.x*c + this.velocity.y*s;
+        const localVy = -this.velocity.x*s + this.velocity.y*c;
+        // Fins create drag opposite to sideways velocity to stabilize the craft
+        
+        // NotZeri - Could you fix the glitch with the fins?
+        // lunch - sure
+        
+        const dragForce = -part.dragCoef * localVy * Math.abs(localVy) * airDensity * waterFactor * 0.5;
+        const forceX = -s, forceY = c; // Local Y axis in world space :O
+        Fx += forceX * dragForce;
+        Fy += forceY * dragForce;
+        T += part.localX * dragForce;
+      }
+      
+      if (part.volume > 0 && this.position.y < 0) {
+        const pw = this.getPartWorld(part);
+        const depth = -pw.y;
+        if (depth > 0) {
+          const bf = part.volume * 12 * Math.min(depth, 1.5);
+          Fy += bf; T += part.localX * bf;
+        }
+      }
+    }
+
+    Fx -= this.velocity.x * speed * 0.02 * airDensity * waterFactor;
+    Fy -= this.velocity.y * speed * 0.02 * airDensity * waterFactor;
+
+    this.velocity.x += (Fx / this.mass) * dt;
+    this.velocity.y += (Fy / this.mass) * dt;
+    this.angularVelocity += (T / this.inertia) * dt;
+
+    this.angularVelocity += yawInput * 1.5 * dt;
+    this.angularVelocity *= 0.96;
+
+    const maxSpeed = 125;
+    const sp = Math.sqrt(this.velocity.x**2 + this.velocity.y**2);
+    if (sp > maxSpeed) {
+      this.velocity.x = (this.velocity.x / sp) * maxSpeed;
+      this.velocity.y = (this.velocity.y / sp) * maxSpeed;
+    }
+    this.angularVelocity = Math.max(-3, Math.min(3, this.angularVelocity));
+
+    this.position.x += this.velocity.x * dt;
+    this.position.y += this.velocity.y * dt;
+    this.angle += this.angularVelocity * dt;
+
+    for (const part of this.parts) {
+      const pw = this.getPartWorld(part);
+      const surfY = getSurfaceHeight(pw.x);
+      if (pw.y - 0.4 < surfY) {
+        const pen = surfY - (pw.y - 0.4);
+        this.position.y += pen;
+        if (this.velocity.y < 0) this.velocity.y *= -0.2;
+        
+        const rx = part.localX * Math.cos(this.angle) - part.localY * Math.sin(this.angle);
+        // Fixed rotation direction: hitting the right side should rotate counter-clockwise
+        // yay
+        this.angularVelocity += rx * 1.5 * dt; 
+        this.velocity.x *= 0.92;
+      }
+    }
+
+    for (const part of this.parts) {
+      if (part.type !== 'wheel') continue;
+      const pw = this.getPartWorld(part);
+      const wr = 0.55;
+      const surfY = getSurfaceHeight(pw.x);
+      
+      if (pw.y - wr < surfY + 0.2 && pw.y + wr > surfY - 0.5) {
+        if (pw.y < surfY + wr) {
+          this.velocity.y += (surfY + wr - pw.y) * 10 * dt;
+          this.velocity.y *= 0.9;
+        }
+        
+        if (thrustInput !== 0) {
+           this.velocity.x += fwdX * 120 * thrustInput * dt; 
+           this.velocity.y += fwdY * 120 * thrustInput * dt;
+        }
+        
+        const sideX = -s; 
+        const sideY = c;
+        const sideVel = this.velocity.x * sideX + this.velocity.y * sideY;
+        this.velocity.x -= sideX * sideVel * 0.8 * dt;
+        this.velocity.y -= sideY * sideVel * 0.8 * dt;
+      }
+    }
+
+    if (Math.abs(this.position.x) > 350) { this.position.x = Math.sign(this.position.x) * 350; this.velocity.x = -this.velocity.x * 0.3; }
+    if (this.fuel < 0) this.fuel = 0;
+  }
+}
+
+const vehicle = new Vehicle();
+
+window.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  keys[k] = true;
+  if (k === 'r' && gameMode === 'build') partRotation = (partRotation + 1) % 4;
+  if (k === 'enter' && gameMode === 'build') enterWorld();
+  if (k === 'e' && gameMode === 'play' && !player.inVehicle) backToBuild();
+  if (k === 'f' && gameMode === 'play') toggleVehicleEntry();
+  if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key)) e.preventDefault();
+});
+window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  mouse.sx = (e.clientX - rect.left) * DPR;
+  mouse.sy = (e.clientY - rect.top) * DPR;
+  mouse.wx = (mouse.sx - canvas.width/2) / camera.zoom + camera.x;
+  mouse.wy = -(mouse.sy - canvas.height/2) / camera.zoom + camera.y;
+  mouse.gx = Math.round(mouse.wx);
+  mouse.gy = Math.round(mouse.wy);
+});
+
+canvas.addEventListener('mousedown', e => {
+  e.preventDefault();
+  if (e.button === 0) {
+    if (gameMode === 'build') vehicle.addPart(selectedPart, mouse.gx, mouse.gy, partRotation);
+  } else if (e.button === 2) {
+    if (gameMode === 'build') vehicle.removePart(mouse.gx, mouse.gy);
+  }
+});
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY > 0 ? 0.9 : 1.1;
+  const newZoom = Math.max(5, Math.min(120, camera.zoom * factor));
+  const wx = (mouse.sx - canvas.width/2) / camera.zoom + camera.x;
+  const wy = -(mouse.sy - canvas.height/2) / camera.zoom + camera.y;
+  camera.x = wx - (mouse.sx - canvas.width/2) / newZoom;
+  camera.y = wy - (mouse.sy - canvas.height/2) / newZoom;
+  camera.zoom = newZoom;
+}, { passive: false });
+
+function toggleVehicleEntry() {
+  const prompt = document.getElementById('enter-prompt');
+  
+  if (player.inVehicle) {
+    player.inVehicle.deactivate();
+    player.x = player.inVehicle.position.x + 2.5; 
+    player.y = player.inVehicle.position.y;
+    player.vx = 0; player.vy = 0;
+    player.inVehicle = null;
+    prompt.textContent = "PRESS F TO ENTER VEHICLE";
+  } else {
+    if (!vehicle.hasCockpit || vehicle.parts.length === 0) { 
+      showToast('No cockpit found!'); 
+      return; 
+    }
+    
+    if (!vehicle.activated) vehicle.activate();
+    vehicle.active = true; 
+    player.inVehicle = vehicle;
+    prompt.textContent = "PRESS F TO EXIT VEHICLE";
+  }
+}
+
+function buildPartsGrid() {
+  const grid = document.getElementById('parts-grid');
+  grid.innerHTML = '';
+  for (const [key, def] of Object.entries(PART_DEFS)) {
+    const btn = document.createElement('button');
+    btn.className = 'part-btn' + (key === selectedPart ? ' active' : '');
+    btn.innerHTML = `<div class="part-icon">${getPartIconSVG(key, def)}</div><span>${def.name}</span>`;
+    btn.addEventListener('click', () => {
+      selectedPart = key;
+      document.querySelectorAll('.part-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('selected-name').textContent = def.name;
+      document.getElementById('selected-desc').textContent = def.desc;
+    });
+    grid.appendChild(btn);
+  }
+}
+
+function getPartIconSVG(type, def) {
+  const c = def.color, e = def.edge;
+  switch(type) {
+    case 'hull': return `<svg width="26" height="26" viewBox="0 0 26 26"><rect x="4" y="4" width="18" height="18" fill="${c}" stroke="${e}" stroke-width="2"/></svg>`;
+    case 'armor': return `<svg width="26" height="26" viewBox="0 0 26 26"><rect x="3" y="3" width="20" height="20" fill="${c}" stroke="${e}" stroke-width="2.5"/><rect x="7" y="7" width="12" height="12" fill="none" stroke="${e}" stroke-width="1"/></svg>`;
+    case 'wheel': return `<svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="9" fill="${c}" stroke="${e}" stroke-width="2"/><circle cx="13" cy="13" r="2.5" fill="${e}"/><line x1="13" y1="4" x2="13" y2="22" stroke="${e}" stroke-width="1.5"/><line x1="4" y1="13" x2="22" y2="13" stroke="${e}" stroke-width="1.5"/></svg>`;
+    case 'thruster': return `<svg width="26" height="26" viewBox="0 0 26 26"><rect x="6" y="3" width="14" height="14" fill="${c}" stroke="${e}" stroke-width="2"/><polygon points="9,17 13,24 17,17" fill="#ffcc40" opacity="0.8"/></svg>`;
+    case 'fuel': return `<svg width="26" height="26" viewBox="0 0 26 26"><rect x="5" y="4" width="16" height="18" fill="${c}" stroke="${e}" stroke-width="2"/><rect x="7" y="7" width="12" height="12" fill="#fff" opacity="0.25"/></svg>`;
+    case 'cockpit': return `<svg width="26" height="26" viewBox="0 0 26 26"><rect x="4" y="4" width="18" height="18" rx="5" fill="${c}" stroke="${e}" stroke-width="2"/><circle cx="13" cy="11" r="4" fill="#fff" opacity="0.4"/></svg>`;
+    case 'propeller': return `<svg width="26" height="26" viewBox="0 0 26 26"><rect x="10" y="5" width="6" height="14" fill="${c}" stroke="${e}" stroke-width="1.5"/><ellipse cx="13" cy="21" rx="8" ry="2" fill="${c}" stroke="${e}" stroke-width="1.5"/></svg>`;
+    case 'wing': return `<svg width="26" height="26" viewBox="0 0 26 26"><polygon points="3,13 13,9 13,17 3,15" fill="${c}" stroke="${e}" stroke-width="1.5"/><polygon points="13,9 23,11 23,15 13,17" fill="${c}" stroke="${e}" stroke-width="1.5"/></svg>`;
+    case 'buoyancy': return `<svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="9" fill="${c}" stroke="${e}" stroke-width="2"/><path d="M7 13 Q13 9 19 13 Q13 17 7 13" fill="#fff" opacity="0.3"/></svg>`;
+    case 'fin': return `<svg width="26" height="26" viewBox="0 0 26 26"><polygon points="4,13 13,4 13,22" fill="${c}" stroke="${e}" stroke-width="1.5"/></svg>`;
+  }
+  return '';
+}
+
+function enterWorld() {
+  if (vehicle.parts.length === 0) { showToast('No parts to launch!'); return; }
+  if (!vehicle.hasCockpit) { showToast('Cockpit required!'); return; }
+  gameMode = 'play';
+  vehicle.resetToGrid();
+  player.x = 4; player.y = 18; player.vx = 0; player.vy = 0; player.inVehicle = null;
+  document.getElementById('build-ui').style.display = 'none';
+  document.getElementById('play-ui').style.display = 'block';
+  document.getElementById('build-help').style.display = 'none';
+  document.getElementById('play-help').style.display = 'block';
+  document.getElementById('alt-scale').style.display = 'block';
+  
+  const prompt = document.getElementById('enter-prompt');
+  prompt.classList.add('show');
+  prompt.textContent = "PRESS F TO ENTER VEHICLE";
+}
+
+function backToBuild() {
+  if (player.inVehicle) vehicle.deactivate();
+  player.inVehicle = null; vehicle.resetToGrid(); gameMode = 'build';
+  document.getElementById('build-ui').style.display = 'block';
+  document.getElementById('play-ui').style.display = 'none';
+  document.getElementById('build-help').style.display = 'block';
+  document.getElementById('play-help').style.display = 'none';
+  document.getElementById('alt-scale').style.display = 'none';
+  document.getElementById('enter-prompt').classList.remove('show');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+document.getElementById('launch-btn').addEventListener('click', enterWorld);
+document.getElementById('edit-btn').addEventListener('click', backToBuild);
+document.getElementById('clear-btn').addEventListener('click', () => { vehicle.parts = []; vehicle.resetToGrid(); vehicle.recalc(); });
+
+function updatePlayer(dt) {
+  if (player.inVehicle) return;
+  const moveAccel = 35, jumpSpeed = 12, swimAccel = 25;
+  const surfY = getSurfaceHeight(player.x);
+  const inWater = (player.y - player.size/2) < WORLD.waterLevel && surfY < WORLD.waterLevel;
+
+  if (inWater) {
+    if (keys['a'] || keys['arrowleft']) { player.vx -= swimAccel*dt; player.facing = -1; }
+    if (keys['d'] || keys['arrowright']) { player.vx += swimAccel*dt; player.facing = 1; }
+    if (keys['w'] || keys['arrowup'] || keys[' ']) player.vy += swimAccel*dt;
+    if (keys['s'] || keys['arrowdown']) player.vy -= swimAccel*dt;
+    player.vy += 10 * dt; 
+    player.vx *= Math.pow(0.1, dt); player.vy *= Math.pow(0.2, dt);
+    if (Math.random() < 0.08) particles.push({ x: player.x + (Math.random()-0.5)*0.5, y: player.y + (Math.random()-0.5)*0.5, vx: (Math.random()-0.5)*0.5, vy: 1+Math.random(), life: 0.5, maxLife: 0.5, size: 0.06+Math.random()*0.05, color: 'rgba(150,200,255,0.6)' });
+  } else {
+    if (keys['a'] || keys['arrowleft']) { player.vx -= moveAccel*dt; if (player.onGround) player.facing = -1; }
+    if (keys['d'] || keys['arrowright']) { player.vx += moveAccel*dt; if (player.onGround) player.facing = 1; }
+    if ((keys['w'] || keys['arrowup'] || keys[' ']) && player.onGround) { player.vy = jumpSpeed; player.onGround = false; }
+    player.vy -= WORLD.gravity * dt;
+    if (player.onGround) player.vx *= Math.pow(0.001, dt); else player.vx *= Math.pow(0.2, dt);
+  }
+
+  player.x += player.vx * dt; player.y += player.vy * dt;
+  const newSurf = getSurfaceHeight(player.x);
+  if (player.y - player.size/2 < newSurf) {
+    player.y = newSurf + player.size/2;
+    if (player.vy < 0) player.vy = 0;
+    player.onGround = true;
+  } else player.onGround = false;
+
+  if (Math.abs(player.vx) > 0.5 && player.onGround) player.walkPhase += dt * 10; else player.walkPhase = 0;
+  if (player.x < -200) { player.x = -200; player.vx = 0; }
+  if (player.x > 280) { player.x = 280; player.vx = 0; }
+  if (player.y < WORLD.seaFloor + 1) { player.y = WORLD.seaFloor + 1; player.vy = 0; }
+}
+
+function updateParticles(dt) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    if (p.color === 'rgba(150,200,255,0.6)') p.vy += 8 * dt; else p.vy -= 15 * dt;
+    p.vx *= 0.96; p.vy *= 0.96; p.life -= dt;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+}
+
+function worldToScreen(x, y) { return { x: (x - camera.x) * camera.zoom + canvas.width/2, y: -(y - camera.y) * camera.zoom + canvas.height/2 }; }
+
+function drawSky() {
+  const altTop = Math.max(0, camera.y + (canvas.height/2) / camera.zoom);
+  const altBot = Math.max(0, camera.y - (canvas.height/2) / camera.zoom);
+  const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  const topC = altTop > WORLD.spaceStart ? '#050505' : altTop > 3000 ? `rgb(${20-10*(altTop-3000)/1500},${20-10*(altTop-3000)/1500},${40-20*(altTop-3000)/1500})` : '#2a3550';
+  const botC = altBot > WORLD.spaceStart ? '#050505' : altBot > 3000 ? `rgb(${20-10*(altBot-3000)/1500},${20-10*(altBot-3000)/1500},${40-20*(altBot-3000)/1500})` : altBot > 1000 ? '#4a6080' : '#8a9aa0';
+  grad.addColorStop(0, topC); grad.addColorStop(1, botC);
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const skyOp = Math.max(0, Math.min(1, (camera.y - 2000) / 2000));
+  if (skyOp > 0) {
+    for (const st of stars) {
+      const sp = worldToScreen(st.x, st.y);
+      if (sp.x < -10 || sp.x > canvas.width+10 || sp.y < -10 || sp.y > canvas.height+10) continue;
+      const tw = 0.6 + 0.4 * Math.sin(time * st.twinkleSpeed + st.twinkle);
+      ctx.fillStyle = `rgba(255,255,255,${st.brightness * tw * skyOp})`;
+      ctx.fillRect(sp.x, sp.y, st.size * camera.zoom * 0.5, st.size * camera.zoom * 0.5);
+    }
+  }
+
+  for (const cl of clouds) {
+    cl.x += cl.drift * 0.016;
+    const sp = worldToScreen(cl.x, cl.y);
+    if (sp.x < -200 || sp.x > canvas.width+200 || sp.y < -50 || sp.y > canvas.height+100) continue;
+    const alpha = 0.6 * Math.max(0, 1 - camera.y / 4000);
+    ctx.fillStyle = `rgba(200,200,220,${alpha})`;
+    ctx.fillRect(sp.x - cl.w*camera.zoom*0.5, sp.y - cl.h*camera.zoom*0.5, cl.w*camera.zoom, cl.h*camera.zoom);
+  }
+}
+
+function drawTerrain() {
+  const left = camera.x - (canvas.width/2) / camera.zoom - 5;
+  const right = camera.x + (canvas.width/2) / camera.zoom + 5;
+  const step = 0.5;
+
+  ctx.beginPath();
+  let first = true;
+  for (let x = left; x <= right; x += step) {
+    const h = getGroundHeight(x);
+    const sp = worldToScreen(x, h);
+    if (first) { ctx.moveTo(sp.x, sp.y); first = false; } else ctx.lineTo(sp.x, sp.y);
+  }
+  const br = worldToScreen(right, WORLD.seaFloor - 5);
+  const bl = worldToScreen(left, WORLD.seaFloor - 5);
+  ctx.lineTo(br.x, br.y); ctx.lineTo(bl.x, bl.y); ctx.closePath();
+
+  const topS = worldToScreen(0, 18); const botS = worldToScreen(0, WORLD.seaFloor - 5);
+  const grad = ctx.createLinearGradient(0, topS.y, 0, botS.y);
+  grad.addColorStop(0, '#5a4530'); grad.addColorStop(0.15, '#3a2a1a'); grad.addColorStop(1, '#1a1208');
+  ctx.fillStyle = grad; ctx.fill();
+
+  ctx.strokeStyle = '#4a7a3a'; ctx.lineWidth = 4 * DPR; ctx.lineCap = 'square';
+  ctx.beginPath(); let drawing = false;
+  for (let x = left; x <= right; x += step) {
+    const h = getGroundHeight(x);
+    if (h > 0.5) {
+      const sp = worldToScreen(x, h);
+      if (!drawing) { ctx.moveTo(sp.x, sp.y); drawing = true; } else ctx.lineTo(sp.x, sp.y);
+    } else drawing = false;
+  }
+  ctx.stroke();
+}
+
+function drawDock() {
+  const sp1 = worldToScreen(DOCK.x1, DOCK.y);
+  const sp2 = worldToScreen(DOCK.x2, DOCK.y);
+  const ph = 6 * DPR;
+
+  ctx.fillStyle = '#8a6a3a'; ctx.fillRect(sp1.x, sp1.y, sp2.x - sp1.x, ph);
+  ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 2*DPR; ctx.strokeRect(sp1.x, sp1.y, sp2.x - sp1.x, ph);
+
+  ctx.strokeStyle = '#5a3a1a'; ctx.lineWidth = 1*DPR;
+  for (let x = DOCK.x1; x <= DOCK.x2; x += 2) {
+    const sp = worldToScreen(x, DOCK.y);
+    ctx.beginPath(); ctx.moveTo(sp.x, sp1.y); ctx.lineTo(sp.x, sp1.y + ph); ctx.stroke();
+  }
+
+  for (let x = DOCK.x1 + 3; x < DOCK.x2; x += 6) {
+    const sp = worldToScreen(x, DOCK.y);
+    const bsp = worldToScreen(x, WORLD.seaFloor);
+    ctx.fillStyle = '#3a2a1a';
+    ctx.fillRect(sp.x - 3*DPR, sp1.y + ph, 6*DPR, bsp.y - sp1.y - ph);
+  }
+}
+
+function drawDecor() {
+  for (const d of decor) {
+    const sp = worldToScreen(d.x, d.y);
+    if (sp.x < -50 || sp.x > canvas.width + 50) continue;
+    if (d.type === 'tree') {
+      ctx.fillStyle = '#4a3a1a'; ctx.fillRect(sp.x - 3*DPR, sp.y - 10*DPR*d.size, 6*DPR, 10*DPR*d.size);
+      ctx.fillStyle = '#3a6a3a'; ctx.fillRect(sp.x - 10*DPR*d.size, sp.y - 18*DPR*d.size, 20*DPR*d.size, 12*DPR*d.size);
+    } else if (d.type === 'rock') {
+      ctx.fillStyle = '#606870'; ctx.fillRect(sp.x - 6*DPR*d.size, sp.y - 4*DPR*d.size, 12*DPR*d.size, 4*DPR*d.size);
+      ctx.strokeStyle = '#404850'; ctx.lineWidth = 1*DPR; ctx.strokeRect(sp.x - 6*DPR*d.size, sp.y - 4*DPR*d.size, 12*DPR*d.size, 4*DPR*d.size);
+    } else if (d.type === 'seaweed') {
+      ctx.strokeStyle = '#20a040'; ctx.lineWidth = 3*DPR;
+      ctx.beginPath();
+      for (let i = 0; i < d.size * 10; i++) {
+        const yy = d.y + i * 0.3; const xx = d.x + Math.sin(time * 0.5 + i * 0.5) * 0.2;
+        const s = worldToScreen(xx, yy);
+        if (i === 0) ctx.moveTo(s.x, s.y); else ctx.lineTo(s.x, s.y);
+      }
+      ctx.stroke();
+    }
+  }
+}
+
+function drawWater() {
+  const waterY = worldToScreen(0, WORLD.waterLevel).y;
+  if (waterY >= canvas.height) return;
+  if (waterY < 0) {
+    const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    grad.addColorStop(0, 'rgba(20,50,90,0.85)'); grad.addColorStop(1, 'rgba(10,20,40,0.95)');
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  } else {
+    const grad = ctx.createLinearGradient(0, waterY, 0, canvas.height);
+    grad.addColorStop(0, 'rgba(40,100,140,0.6)'); grad.addColorStop(1, 'rgba(10,30,60,0.95)');
+    ctx.fillStyle = grad; ctx.fillRect(0, waterY, canvas.width, canvas.height - waterY);
+
+    ctx.strokeStyle = 'rgba(100,160,200,0.5)'; ctx.lineWidth = 2*DPR;
+    ctx.beginPath();
+    for (let x = 0; x <= canvas.width; x += 4) {
+      const wx = (x - canvas.width/2) / camera.zoom + camera.x;
+      const wave = Math.sin(wx * 0.3 + time * 1.5) * 0.08 + Math.sin(wx * 0.7 + time * 2) * 0.04;
+      const wy = worldToScreen(0, WORLD.waterLevel + wave).y;
+      if (x === 0) ctx.moveTo(x, wy); else ctx.lineTo(x, wy);
+    }
+    ctx.stroke();
+  }
+}
+
+function drawGrid() {
+  if (gameMode !== 'build') return;
+  ctx.strokeStyle = 'rgba(100,100,120,0.2)'; ctx.lineWidth = 1;
+  const range = 18, yMin = 8, yMax = 32;
+  for (let gx = -range; gx <= range; gx++) {
+    const p1 = worldToScreen(gx, yMin), p2 = worldToScreen(gx, yMax);
+    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+  }
+  for (let gy = yMin; gy <= yMax; gy++) {
+    const p1 = worldToScreen(-range, gy), p2 = worldToScreen(range, gy);
+    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+  }
+
+  if (mouse.gx >= -range && mouse.gx <= range && mouse.gy >= yMin && mouse.gy <= yMax) {
+    const hp = worldToScreen(mouse.gx, mouse.gy);
+    ctx.strokeStyle = '#ffcc00'; ctx.lineWidth = 2;
+    ctx.strokeRect(hp.x - camera.zoom*0.45, hp.y - camera.zoom*0.45, camera.zoom*0.9, camera.zoom*0.9);
+    ctx.globalAlpha = 0.5;
+    drawPartAt(selectedPart, hp.x, hp.y, partRotation * Math.PI/2, camera.zoom * 0.45, PART_DEFS[selectedPart]);
+    ctx.globalAlpha = 1;
+  }
+}
+
+function drawPartAt(type, x, y, angle, size, def) {
+  ctx.save();
+  // Canvas rotates clockwise for positive angles, but our physics rotate counter-clockwise.
+  ctx.translate(x, y); ctx.rotate(-angle);
+  const w = size * 0.9;
+  switch(type) {
+    case 'hull':
+      ctx.fillStyle = def.color; ctx.strokeStyle = def.edge; ctx.lineWidth = 3;
+      ctx.fillRect(-w, -w, w*2, w*2); ctx.strokeRect(-w, -w, w*2, w*2); break;
+    case 'armor':
+      ctx.fillStyle = def.color; ctx.strokeStyle = def.edge; ctx.lineWidth = 3;
+      ctx.fillRect(-w, -w, w*2, w*2); ctx.strokeRect(-w, -w, w*2, w*2);
+      ctx.lineWidth = 1; ctx.strokeRect(-w*0.6, -w*0.6, w*1.2, w*1.2); break;
+    case 'wheel':
+      ctx.fillStyle = def.color; ctx.strokeStyle = def.edge; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(0, 0, w, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, w*0.25, 0, Math.PI*2); ctx.fillStyle = def.edge; ctx.fill();
+      ctx.strokeStyle = def.edge; ctx.lineWidth = 2;
+      for(let i=0; i<4; i++) {
+        const a = (i/4)*Math.PI*2;
+        ctx.beginPath(); ctx.moveTo(Math.cos(a)*w*0.25, Math.sin(a)*w*0.25); ctx.lineTo(Math.cos(a)*w*0.85, Math.sin(a)*w*0.85); ctx.stroke();
+      } break;
+    case 'thruster':
+      ctx.fillStyle = def.color; ctx.strokeStyle = def.edge; ctx.lineWidth = 3;
+      ctx.fillRect(-w*0.7, -w, w*1.4, w*1.5); ctx.strokeRect(-w*0.7, -w, w*1.4, w*1.5);
+      ctx.beginPath(); ctx.moveTo(-w*0.5, w*0.5); ctx.lineTo(-w*0.7, w); ctx.lineTo(w*0.7, w); ctx.lineTo(w*0.5, w*0.5); ctx.closePath();
+      ctx.fillStyle = '#404040'; ctx.fill(); ctx.stroke(); break;
+    case 'fuel':
+      ctx.fillStyle = def.color; ctx.strokeStyle = def.edge; ctx.lineWidth = 3;
+      ctx.fillRect(-w*0.8, -w, w*1.6, w*2); ctx.strokeRect(-w*0.8, -w, w*1.6, w*2);
+      ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(-w*0.55, -w*0.7, w*1.1, w*1.4); break;
+    case 'cockpit':
+      ctx.fillStyle = def.color; ctx.strokeStyle = def.edge; ctx.lineWidth = 3;
+      const r = w * 0.3;
+      ctx.beginPath();
+      ctx.moveTo(-w, -w+r); ctx.quadraticCurveTo(-w, -w, -w+r, -w); ctx.lineTo(w-r, -w);
+      ctx.quadraticCurveTo(w, -w, w, -w+r); ctx.lineTo(w, w-r);
+      ctx.quadraticCurveTo(w, w, w-r, w); ctx.lineTo(-w+r, w);
+      ctx.quadraticCurveTo(-w, w, -w, w-r); ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.beginPath(); ctx.arc(0, 0, w*0.4, 0, Math.PI*2); ctx.fill(); break;
+    case 'propeller':
+      ctx.fillStyle = def.color; ctx.strokeStyle = def.edge; ctx.lineWidth = 3;
+      ctx.fillRect(-w*0.3, -w*0.7, w*0.6, w*1.4); ctx.strokeRect(-w*0.3, -w*0.7, w*0.6, w*1.4);
+      ctx.fillStyle = '#80a0c0'; ctx.beginPath(); ctx.ellipse(0, w*0.7, w*1.2, w*0.25, 0, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = def.edge; ctx.stroke(); break;
+    case 'wing':
+      ctx.fillStyle = def.color; ctx.strokeStyle = def.edge; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-w*1.5, -w*0.2); ctx.quadraticCurveTo(-w*1.5, -w*0.5, -w*0.7, -w*0.45);
+      ctx.lineTo(w*1.3, -w*0.15); ctx.quadraticCurveTo(w*1.5, 0, w*1.3, w*0.15);
+      ctx.lineTo(-w*0.7, w*0.45); ctx.quadraticCurveTo(-w*1.5, w*0.5, -w*1.5, w*0.2);
+      ctx.closePath(); ctx.fill(); ctx.stroke(); break;
+    case 'buoyancy':
+      ctx.fillStyle = def.color; ctx.strokeStyle = def.edge; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(0, 0, w, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-w*0.6, 0); ctx.quadraticCurveTo(0, -w*0.4, w*0.6, 0); ctx.quadraticCurveTo(0, w*0.4, -w*0.6, 0);
+      ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fill(); break;
+    case 'fin':
+      ctx.fillStyle = def.color; ctx.strokeStyle = def.edge; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-w, 0); ctx.lineTo(w*0.8, -w); ctx.lineTo(w*0.8, w); ctx.closePath();
+      ctx.fill(); ctx.stroke(); break;
+  }
+  ctx.restore();
+}
+
+function drawVehicle() {
+  if (gameMode === 'play' && !player.inVehicle && vehicle.hasCockpit) {
+    for (const part of vehicle.parts) {
+      if (part.type !== 'cockpit') continue;
+      const pw = vehicle.getPartWorld(part);
+      const sp = worldToScreen(pw.x, pw.y);
+      ctx.save();
+      ctx.shadowColor = '#3aaa20'; ctx.shadowBlur = 15 + Math.sin(time*5) * 8;
+      drawPartAt(part.type, sp.x, sp.y, pw.rot, camera.zoom * 0.45, part);
+      ctx.restore();
+    }
+  }
+
+  for (const part of vehicle.parts) {
+    const pw = vehicle.getPartWorld(part);
+    const sp = worldToScreen(pw.x, pw.y);
+    drawPartAt(part.type, sp.x, sp.y, pw.rot, camera.zoom * 0.45, part);
+
+    if ((part.type === 'thruster' || part.type === 'propeller') && vehicle.active && vehicle.thrustVisual > 0.1) {
+      const flameDir = pw.rot;
+      const flameLen = (1 + Math.random()*0.5) * vehicle.thrustVisual * camera.zoom * 0.7;
+      const flameW = camera.zoom * 0.2;
+      ctx.save(); ctx.translate(sp.x, sp.y); ctx.rotate(-flameDir);
+      const g = ctx.createLinearGradient(0, 0, 0, flameLen);
+      g.addColorStop(0, 'rgba(255,255,200,0.9)'); g.addColorStop(0.3, 'rgba(255,180,40,0.8)');
+      g.addColorStop(0.7, 'rgba(255,80,20,0.5)'); g.addColorStop(1, 'rgba(255,40,0,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.moveTo(-flameW, 0); ctx.quadraticCurveTo(0, flameLen*0.5, 0, flameLen);
+      ctx.quadraticCurveTo(0, flameLen*0.5, flameW, 0); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+  }
+}
+
+function drawPlayer() {
+  if (player.inVehicle) return;
+  const sp = worldToScreen(player.x, player.y);
+  const size = camera.zoom * 0.35;
+  const bob = player.onGround && Math.abs(player.vx) > 0.5 ? Math.sin(player.walkPhase) * 3 * DPR : 0;
+  const inWater = player.y - player.size/2 < WORLD.waterLevel;
+
+  ctx.save();
+  ctx.translate(sp.x, sp.y + bob);
+  if (inWater) ctx.rotate(Math.sin(time * 3) * 0.1);
+
+  ctx.fillStyle = inWater ? '#4080ff' : '#ffcc00';
+  ctx.strokeStyle = inWater ? '#2060cc' : '#e8a800';
+  ctx.lineWidth = 3 * DPR;
+  ctx.fillRect(-size, -size, size*2, size*2);
+  ctx.strokeRect(-size, -size, size*2, size*2);
+
+  const eo = player.facing * size * 0.25;
+  const ey = -size * 0.15; const es = size * 0.16;
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(eo - size*0.18 - es, ey - es, es*2, es*2);
+  ctx.fillRect(eo + size*0.18 - es, ey - es, es*2, es*2);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(eo - size*0.18 - es*0.5 + player.facing*es*0.3, ey - es*0.5, es, es);
+  ctx.fillRect(eo + size*0.18 - es*0.5 + player.facing*es*0.3, ey - es*0.5, es, es);
+
+  if (player.onGround && Math.abs(player.vx) > 0.5) {
+    const fp = Math.sin(player.walkPhase) * size * 0.3;
+    ctx.fillStyle = inWater ? '#2060cc' : '#e8a800';
+    ctx.fillRect(-size*0.5 + fp, size, size*0.4, size*0.2);
+    ctx.fillRect(size*0.1 - fp, size, size*0.4, size*0.2);
+  }
+  ctx.restore();
+}
+
+function drawParticles() {
+  for (const p of particles) {
+    const sp = worldToScreen(p.x, p.y);
+    const a = p.life / p.maxLife;
+    const sz = p.size * camera.zoom * (0.5 + a*0.5);
+    ctx.globalAlpha = a; ctx.fillStyle = p.color;
+    ctx.fillRect(sp.x - sz/2, sp.y - sz/2, sz, sz);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function updateBuildStats() {
+  document.getElementById('stat-mass').textContent = vehicle.mass.toFixed(1);
+  document.getElementById('stat-fuel').textContent = vehicle.maxFuel;
+  document.getElementById('stat-parts').textContent = vehicle.parts.length;
+  document.getElementById('stat-cockpit').textContent = vehicle.hasCockpit ? 'Yes' : 'No';
+}
+
+function updatePlayHUD() {
+  const target = player.inVehicle ? vehicle.position : { x: player.x, y: player.y };
+  const alt = Math.max(0, Math.round(target.y));
+  document.getElementById('altitude').textContent = alt;
+  const speed = player.inVehicle ? Math.sqrt(vehicle.velocity.x**2 + vehicle.velocity.y**2) : Math.sqrt(player.vx**2 + player.vy**2);
+  document.getElementById('speed').textContent = Math.round(speed);
+  const fpct = vehicle.maxFuel > 0 ? (vehicle.fuel / vehicle.maxFuel * 100) : 0;
+  document.getElementById('fuel-pct').textContent = Math.round(fpct);
+  document.getElementById('fuel-fill').style.width = fpct + '%';
+
+  const zone = target.y < -5 ? 'UNDERWATER' : target.y < 500 ? 'SURFACE' : target.y < 1500 ? 'HIGH ALT' : target.y < 3500 ? 'TROPOSPHERE' : target.y < WORLD.spaceStart ? 'STRATOSPHERE' : 'SPACE';
+  document.getElementById('zone').textContent = zone;
+
+  // Fix the slider on the altitude scale so it lines up mathematically 
+  const y = Math.max(0, Math.min(WORLD.spaceStart, target.y));
+  const sp = 1 - (y / WORLD.spaceStart);
+  const si = document.getElementById('scale-indicator');
+  si.style.top = (20 + sp * 300) + 'px';
+}
+
+buildPartsGrid();
+
+function addStarter() {
+  vehicle.parts = []; vehicle.activated = false;
+  vehicle.addPart('cockpit', 0, 14, 0);
+  vehicle.addPart('fuel', 1, 14, 0);
+  vehicle.addPart('wheel', 2, 14, 0);
+  vehicle.addPart('wheel', -1, 14, 0);
+  vehicle.addPart('thruster', 0, 13, 0); 
+  vehicle.recalc();
+}
+addStarter();
+
+let lastTime = performance.now();
+function loop(now) {
+  const dt = Math.min(0.033, (now - lastTime) / 1000);
+  lastTime = now; time += dt;
+
+  if (gameMode === 'play') {
+    const target = player.inVehicle ? vehicle.position : player;
+    camera.x += (target.x - camera.x) * 0.08;
+    camera.y += (target.y + 3 - camera.y) * 0.08;
+    const tz = Math.max(15, Math.min(45, 30 - (target.y || 0) * 0.002));
+    camera.zoom += (tz - camera.zoom) * 0.05;
+  } else {
+    if (keys['a']) camera.x -= 15 * dt;
+    if (keys['d']) camera.x += 15 * dt;
+    camera.x += (0 - camera.x) * 0.02;
+    camera.y += (17 - camera.y) * 0.05;
+    camera.zoom += (28 - camera.zoom) * 0.05;
+  }
+
+  if (gameMode === 'play') {
+    if (player.inVehicle) vehicle.update(dt); else updatePlayer(dt);
+  }
+  updateParticles(dt);
+
+  if (gameMode === 'build') updateBuildStats();
+  if (gameMode === 'play') updatePlayHUD();
+
+  drawSky(); drawTerrain(); drawDecor(); drawWater(); drawDock(); drawGrid(); drawParticles(); drawVehicle(); drawPlayer();
+
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>
