@@ -31,7 +31,7 @@
   ::-webkit-scrollbar-track { background: #1a1a1f; }
   ::-webkit-scrollbar-thumb { background: #4a4a55; border:1px solid #111118; }
 
-  .title { font-family:'Oswald', sans-serif; font-size:18px; font-weight:700; letter-spacing:2px; color:#111118; text-transform:uppercase; }
+  .title { font-family:'Oswald', sans-serif; font-size:18px; font-weight:700; letter-spacing:2px; color:#ffffff; text-transform:uppercase; }
   
   .parts-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:12px; }
   .part-btn {
@@ -100,14 +100,15 @@
 
 <div id="build-ui" class="ui">
   <div class="panel">
-    <div class="panel-header"><div class="stat-parts">PARTS PALETTE</div></div>
+    <div class="panel-header"><div class="title">PARTS PALETTE</div></div>
     <div class="panel-content">
       <div class="parts-grid" id="parts-grid"></div>
       <div class="info-box">
         <div class="selected-name" id="selected-name">Hull</div>
         <div class="selected-desc" id="selected-desc">Light structural block</div>
       </div>
-      <div class="rotate-hint"><span class="key">R</span> rotate &nbsp; <span class="key">R-Click</span> delete</div>
+      <div class="rotate-hint"><span class="key">Drag L-Click</span> Fill &nbsp; <span class="key">Drag R-Click</span> Delete</div>
+      <div class="rotate-hint"><span class="key">R</span> rotate</div>
       <div class="stats">
         <div class="stat-row">Mass: <span id="stat-mass">0.0</span></div>
         <div class="stat-row">Fuel Cap: <span id="stat-fuel">0</span></div>
@@ -160,11 +161,11 @@
 
 <div id="controls-help" class="ui">
   <div class="help-text" id="build-help">
-    <strong>BUILD:</strong> <span class="key">Click</span> place &nbsp; <span class="key">R-Click</span> delete &nbsp; <span class="key">R</span> rotate &nbsp; <span class="key">A</span><span class="key">D</span> pan
+    <strong>BUILD:</strong> <span class="key">Drag L-Click</span> Fill &nbsp; <span class="key">Drag R-Click</span> Delete &nbsp; <span class="key">R</span> rotate &nbsp; <span class="key">A</span><span class="key">D</span> pan
   </div>
   <div class="help-text" id="play-help" style="display:none;">
     <strong>ON FOOT:</strong> <span class="key">A</span><span class="key">D</span> walk &nbsp; <span class="key">W</span> jump &nbsp; <span class="key">F</span> enter veh
-    <br><strong>IN VEHICLE:</strong> <span class="key">W</span><span class="key">S</span> drive/thrust &nbsp; <span class="key">A</span><span class="key">D</span> rotate &nbsp; <span class="key">F</span> exit
+    <br><strong>IN VEHICLE:</strong> <span class="key">W</span><span class="key">S</span> drive/thrust &nbsp; <span class="key">A</span><span class="key">D</span> rotate &nbsp; <span class="key">F</span> exit &nbsp; <span class="key">1-0</span> Disconnect
   </div>
 </div>
 
@@ -242,16 +243,18 @@ for (const isl of ISLANDS) {
 for (let i = 0; i < 18; i++) decor.push({ type: 'seaweed', x: (Math.random() - 0.5) * 350, y: WORLD.seaFloor, size: 1 + Math.random() * 2.5 });
 
 const PART_DEFS = {
-  hull:      { name:'Hull',      mass:1.5, color:'#7a7a85', edge:'#3a3a45', desc:'Light structural block' },
-  armor:     { name:'Armor',     mass:4.0, color:'#454555', edge:'#1a1a20', desc:'Heavy, durable block' },
-  wheel:     { name:'Wheel',     mass:1.0, color:'#1a1a1a', edge:'#444',    desc:'Rolls on ground & water' },
-  thruster:  { name:'Thruster',  mass:1.0, color:'#e85a20', edge:'#a83410', thrust:180, fuelUse:4, desc:'Rocket engine (uses fuel)' },
-  fuel:      { name:'Fuel Tank', mass:1.5, color:'#e8c020', edge:'#a88010', fuelCap:100, desc:'Stores fuel for engines' },
-  cockpit:   { name:'Cockpit',   mass:1.5, color:'#20d0e8', edge:'#1080a0', desc:'Control center (required)' },
-  propeller: { name:'Propeller', mass:1.0, color:'#3080e8', edge:'#1040a0', thrust:120, fuelUse:2, waterOnly:true, desc:'Water propulsion only' },
-  wing:      { name:'Wing',      mass:0.8, color:'#c0c8d0', edge:'#707880', liftCoef:2.5, desc:'Generates lift in air' },
-  buoyancy:  { name:'Buoyancy',  mass:0.5, color:'#20e8b0', edge:'#10a080', volume:6, desc:'Floats in water (submarines)' },
-  fin:       { name:'Fin',       mass:0.5, color:'#d0d8e0', edge:'#808890', dragCoef:3.5, desc:'Stabilizes movement' },
+  hull:        { name:'Hull',        mass:1.5, color:'#7a7a85', edge:'#3a3a45', desc:'Light structural block' },
+  armor:       { name:'Armor',       mass:4.0, color:'#454555', edge:'#1a1a20', desc:'Heavy, durable block' },
+  wheel:       { name:'Wheel',       mass:1.0, color:'#1a1a1a', edge:'#444',    desc:'Rolls on ground & water' },
+  thruster:    { name:'Thruster',    mass:1.0, color:'#e85a20', edge:'#a83410', thrust:180, fuelUse:4, desc:'Rocket engine (uses fuel)' },
+  fuel:        { name:'Fuel Tank',   mass:1.5, color:'#e8c020', edge:'#a88010', fuelCap:100, desc:'Stores fuel for engines' },
+  cockpit:     { name:'Cockpit',     mass:1.5, color:'#20d0e8', edge:'#1080a0', desc:'Control center (required)' },
+  propeller:   { name:'Propeller',   mass:1.0, color:'#3080e8', edge:'#1040a0', thrust:120, fuelUse:2, waterOnly:true, desc:'Water propulsion only' },
+  wing:        { name:'Wing',         mass:0.8, color:'#c0c8d0', edge:'#707880', liftCoef:2.5, desc:'Generates lift in air' },
+  buoyancy:    { name:'Buoyancy',    mass:0.5, color:'#20e8b0', edge:'#10a080', volume:6, desc:'Floats in water (submarines)' },
+  fin:         { name:'Fin',          mass:0.5, color:'#d0d8e0', edge:'#808890', dragCoef:3.5, desc:'Stabilizes movement' },
+  disconnector:{ name:'Disconnector', mass:0.5, color:'#d0d020', edge:'#a0a010', desc:'Disconnects parts (Press 1-0)' },
+  parachute:   { name:'Parachute',    mass:0.5, color:'#ffffff', edge:'#cccccc', parachuteDrag:10, desc:'Slows down falling speed' },
 };
 
 let gameMode = 'build';
@@ -263,6 +266,14 @@ let keys = {};
 let particles = [];
 let stars = [], clouds = [];
 let time = 0;
+let debris = []; // Array for disconnected vehicle parts debedbebdebdbebdbe
+let nextDisconnectorId = 1;
+
+// Advanced Building Vars
+// like YARRR YARRR AYRRR
+let isDragging = false;
+let isDraggingDel = false;
+let dragStart = { x: 0, y: 0 };
 
 for (let i = 0; i < 500; i++) stars.push({ x:(Math.random()-0.5)*800, y:3500+Math.random()*6000, size:Math.random()*0.06+0.02, brightness:Math.random()*0.6+0.4, twinkle:Math.random()*Math.PI*2, twinkleSpeed:0.5+Math.random()*2 });
 for (let i = 0; i < 70; i++) clouds.push({ x:(Math.random()-0.5)*500, y:200+Math.random()*2500, w:5+Math.random()*10, h:1.2+Math.random()*1.5, drift:(Math.random()-0.5)*0.3 });
@@ -272,6 +283,55 @@ const player = { x: 4, y: 18, vx: 0, vy: 0, size: 0.7, onGround: false, inWater:
 class Vec2 { 
   constructor(x=0, y=0){ this.x=x; this.y=y; } 
   set(x, y) { this.x = x; this.y = y; return this; }
+}
+
+function getConnectedComponents(parts) {
+  const visited = new Set();
+  const components = [];
+  for (const p of parts) {
+    if (visited.has(p)) continue;
+    const comp = [];
+    const queue = [p];
+    visited.add(p);
+    while (queue.length > 0) {
+      const curr = queue.shift();
+      comp.push(curr);
+      for (const other of parts) {
+        if (visited.has(other)) continue;
+        const dx = Math.abs(curr.gx - other.gx);
+        const dy = Math.abs(curr.gy - other.gy);
+        if ((dx === 1 && dy === 0) || (dx === 0 && dy === 1)) {
+          visited.add(other); queue.push(other);
+        }
+      }
+    }
+    components.push(comp);
+  }
+  return components;
+}
+
+function splitVehicle(veh) {
+  const comps = getConnectedComponents(veh.parts);
+  let mainComp = comps.find(c => c.some(p => p.type === 'cockpit'));
+  if (!mainComp) mainComp = comps.reduce((a, b) => a.length > b.length ? a : b, []);
+
+  for (const comp of comps) {
+    if (comp === mainComp) continue;
+    const d = new Vehicle();
+    d.parts = comp;
+    d.recalc();
+    d.activated = true; d.active = true;
+    d.angle = veh.angle;
+    d.angularVelocity = veh.angularVelocity;
+    d.velocity = new Vec2(veh.velocity.x, veh.velocity.y);
+    d.thrustVisual = 0;
+    d.centerOfMass = new Vec2(veh.centerOfMass.x, veh.centerOfMass.y);
+    d.position = new Vec2(veh.position.x, veh.position.y);
+    d.rebuildStructure();
+    debris.push(d);
+  }
+  veh.parts = mainComp;
+  veh.rebuildStructure();
 }
 
 class Vehicle {
@@ -290,13 +350,20 @@ class Vehicle {
   addPart(type, gx, gy, rot) {
     if (this.parts.some(p => p.gx === gx && p.gy === gy)) return false;
     const def = PART_DEFS[type];
-    this.parts.push({
+    const newPart = {
       type, gx, gy, rot, mass: def.mass, color: def.color, edge: def.edge,
       thrust: def.thrust || 0, fuelUse: def.fuelUse || 0,
       fuelCap: def.fuelCap || 0, liftCoef: def.liftCoef || 0,
       volume: def.volume || 0, dragCoef: def.dragCoef || 0,
       waterOnly: def.waterOnly || false, localX: 0, localY: 0,
-    });
+      parachuteDrag: def.parachuteDrag || 0,
+      groupId: -1,
+    };
+    if (type === 'disconnector') {
+      newPart.groupId = nextDisconnectorId;
+      nextDisconnectorId = (nextDisconnectorId + 1) % 10;
+    }
+    this.parts.push(newPart);
     this.recalc();
     return true;
   }
@@ -314,6 +381,34 @@ class Vehicle {
       if (p.type === 'cockpit') this.hasCockpit = true;
     }
     if (this.fuel === 0 && this.maxFuel > 0) this.fuel = this.maxFuel;
+  }
+
+  rebuildStructure() {
+    let cx = 0, cy = 0, totalMass = 0;
+    for (const p of this.parts) { 
+      cx += p.gx * p.mass; 
+      cy += p.gy * p.mass; 
+      totalMass += p.mass; 
+    }
+    if (totalMass > 0) { cx /= totalMass; cy /= totalMass; }
+    
+    const c = Math.cos(this.angle), s = Math.sin(this.angle);
+    const oldCx = this.centerOfMass.x, oldCy = this.centerOfMass.y;
+    const dx = cx - oldCx, dy = cy - oldCy;
+    
+    this.position.x += dx * c - dy * s;
+    this.position.y += dx * s + dy * c;
+    
+    this.centerOfMass.x = cx;
+    this.centerOfMass.y = cy;
+    
+    this.inertia = 0;
+    for (const p of this.parts) {
+      p.localX = p.gx - cx; 
+      p.localY = p.gy - cy;
+      this.inertia += p.mass * (p.localX*p.localX + p.localY*p.localY + 0.34);
+    }
+    this.recalc();
   }
 
   activate() {
@@ -357,8 +452,22 @@ class Vehicle {
     };
   }
 
-  update(dt) {
+  update(dt, isPlayer = true) {
     if (!this.active || this.parts.length === 0) return;
+
+    if (isPlayer) {
+      for (let i=0; i<=9; i++) {
+        const k = i.toString();
+        if (keys[k]) {
+          keys[k] = false;
+          const disc = this.parts.find(p => p.type === 'disconnector' && p.groupId === i);
+          if (disc) {
+            this.parts = this.parts.filter(p => p !== disc);
+            splitVehicle(this);
+          }
+        }
+      }
+    }
 
     const altFactor = Math.max(0, 1 - this.position.y / WORLD.atmosphereHeight);
     let Fx = 0, Fy = -WORLD.gravity * this.mass * altFactor; 
@@ -368,9 +477,9 @@ class Vehicle {
     const fwdX = c; 
     const fwdY = s;  
 
-    const thrustInput = (keys['w'] || keys['arrowup'] ? 1 : 0) - (keys['s'] || keys['arrowdown'] ? 1 : 0);
-    const yawInput = (keys['a'] || keys['arrowleft'] ? 1 : 0) - (keys['d'] || keys['arrowright'] ? 1 : 0);
-    const boost = keys['shift'] ? 1.8 : 1;
+    const thrustInput = isPlayer ? ((keys['w'] || keys['arrowup'] ? 1 : 0) - (keys['s'] || keys['arrowdown'] ? 1 : 0)) : 0;
+    const yawInput = isPlayer ? ((keys['a'] || keys['arrowleft'] ? 1 : 0) - (keys['d'] || keys['arrowright'] ? 1 : 0)) : 0;
+    const boost = isPlayer && keys['shift'] ? 1.8 : 1;
 
     for (const part of this.parts) {
       if (part.type === 'thruster' || part.type === 'propeller') {
@@ -380,7 +489,6 @@ class Vehicle {
 
         if (thrustInput !== 0 && this.fuel > 0) {
           let pAngle = (part.rot || 0) * Math.PI / 2;
-
           const lx = -Math.sin(pAngle); 
           const ly = Math.cos(pAngle);  
           
@@ -436,16 +544,20 @@ class Vehicle {
       if (part.type === 'fin') {
         const localVx = this.velocity.x*c + this.velocity.y*s;
         const localVy = -this.velocity.x*s + this.velocity.y*c;
-        // Fins create drag opposite to sideways velocity to stabilize the craft
-        
-        // NotZeri - Could you fix the glitch with the fins?
-        // lunch - sure
-        
         const dragForce = -part.dragCoef * localVy * Math.abs(localVy) * airDensity * waterFactor * 0.5;
-        const forceX = -s, forceY = c; // Local Y axis in world space :O
+        const forceX = -s, forceY = c; 
         Fx += forceX * dragForce;
         Fy += forceY * dragForce;
         T += part.localX * dragForce;
+      }
+
+      if (part.type === 'parachute' && this.position.y > 0) {
+        const vMag = Math.sqrt(this.velocity.x**2 + this.velocity.y**2);
+        if (vMag > 1) {
+          const dragForce = part.parachuteDrag * vMag * airDensity * 0.5;
+          Fx -= (this.velocity.x / vMag) * dragForce;
+          Fy -= (this.velocity.y / vMag) * dragForce;
+        }
       }
       
       if (part.volume > 0 && this.position.y < 0) {
@@ -489,8 +601,6 @@ class Vehicle {
         if (this.velocity.y < 0) this.velocity.y *= -0.2;
         
         const rx = part.localX * Math.cos(this.angle) - part.localY * Math.sin(this.angle);
-        // Fixed rotation direction: hitting the right side should rotate counter-clockwise
-        // yay
         this.angularVelocity += rx * 1.5 * dt; 
         this.velocity.x *= 0.92;
       }
@@ -521,7 +631,6 @@ class Vehicle {
       }
     }
 
-    // if (Math.abs(this.position.x) > 350) { this.position.x = Math.sign(this.position.x) * 350; this.velocity.x = -this.velocity.x * 0.3; }
     if (this.fuel < 0) this.fuel = 0;
   }
 }
@@ -551,12 +660,46 @@ canvas.addEventListener('mousemove', e => {
 
 canvas.addEventListener('mousedown', e => {
   e.preventDefault();
-  if (e.button === 0) {
-    if (gameMode === 'build') vehicle.addPart(selectedPart, mouse.gx, mouse.gy, partRotation);
-  } else if (e.button === 2) {
-    if (gameMode === 'build') vehicle.removePart(mouse.gx, mouse.gy);
+  if (gameMode === 'build') {
+    if (e.button === 0) {
+      isDragging = true;
+      dragStart = { x: mouse.gx, y: mouse.gy };
+    } else if (e.button === 2) {
+      isDraggingDel = true;
+      dragStart = { x: mouse.gx, y: mouse.gy };
+    }
   }
 });
+
+window.addEventListener('mouseup', e => {
+  e.preventDefault();
+  if (gameMode === 'build') {
+    if (e.button === 0 && isDragging) {
+      const minX = Math.min(dragStart.x, mouse.gx);
+      const maxX = Math.max(dragStart.x, mouse.gx);
+      const minY = Math.min(dragStart.y, mouse.gy);
+      const maxY = Math.max(dragStart.y, mouse.gy);
+      for (let x = minX; x <= maxX; x++) {
+        for (let y = minY; y <= maxY; y++) {
+          vehicle.addPart(selectedPart, x, y, partRotation);
+        }
+      }
+      isDragging = false;
+    } else if (e.button === 2 && isDraggingDel) {
+      const minX = Math.min(dragStart.x, mouse.gx);
+      const maxX = Math.max(dragStart.x, mouse.gx);
+      const minY = Math.min(dragStart.y, mouse.gy);
+      const maxY = Math.max(dragStart.y, mouse.gy);
+      for (let x = minX; x <= maxX; x++) {
+        for (let y = minY; y <= maxY; y++) {
+          vehicle.removePart(x, y);
+        }
+      }
+      isDraggingDel = false;
+    }
+  }
+});
+
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 canvas.addEventListener('wheel', e => {
   e.preventDefault();
@@ -623,6 +766,8 @@ function getPartIconSVG(type, def) {
     case 'wing': return `<svg width="26" height="26" viewBox="0 0 26 26"><polygon points="3,13 13,9 13,17 3,15" fill="${c}" stroke="${e}" stroke-width="1.5"/><polygon points="13,9 23,11 23,15 13,17" fill="${c}" stroke="${e}" stroke-width="1.5"/></svg>`;
     case 'buoyancy': return `<svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="9" fill="${c}" stroke="${e}" stroke-width="2"/><path d="M7 13 Q13 9 19 13 Q13 17 7 13" fill="#fff" opacity="0.3"/></svg>`;
     case 'fin': return `<svg width="26" height="26" viewBox="0 0 26 26"><polygon points="4,13 13,4 13,22" fill="${c}" stroke="${e}" stroke-width="1.5"/></svg>`;
+    case 'disconnector': return `<svg width="26" height="26" viewBox="0 0 26 26"><rect x="4" y="4" width="18" height="18" fill="${c}" stroke="${e}" stroke-width="2"/><line x1="6" y1="6" x2="20" y2="20" stroke="${e}" stroke-width="2"/><line x1="20" y1="6" x2="6" y2="20" stroke="${e}" stroke-width="2"/></svg>`;
+    case 'parachute': return `<svg width="26" height="26" viewBox="0 0 26 26"><path d="M5 14 Q13 2 21 14" fill="${c}" stroke="${e}" stroke-width="1.5"/><line x1="5" y1="14" x2="13" y2="22" stroke="${e}" stroke-width="1.5"/><line x1="21" y1="14" x2="13" y2="22" stroke="${e}" stroke-width="1.5"/><rect x="11" y="22" width="4" height="4" fill="${e}"/></svg>`;
   }
   return '';
 }
@@ -632,6 +777,7 @@ function enterWorld() {
   if (!vehicle.hasCockpit) { showToast('Cockpit required!'); return; }
   gameMode = 'play';
   vehicle.resetToGrid();
+  debris = []; // Clear debris from previous runs
   player.x = 4; player.y = 18; player.vx = 0; player.vy = 0; player.inVehicle = null;
   document.getElementById('build-ui').style.display = 'none';
   document.getElementById('play-ui').style.display = 'block';
@@ -647,6 +793,7 @@ function enterWorld() {
 function backToBuild() {
   if (player.inVehicle) vehicle.deactivate();
   player.inVehicle = null; vehicle.resetToGrid(); gameMode = 'build';
+  debris = [];
   document.getElementById('build-ui').style.display = 'block';
   document.getElementById('play-ui').style.display = 'none';
   document.getElementById('build-help').style.display = 'block';
@@ -858,7 +1005,38 @@ function drawGrid() {
     ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
   }
 
-  if (mouse.gx >= -range && mouse.gx <= range && mouse.gy >= yMin && mouse.gy <= yMax) {
+  if (isDragging) {
+    const minX = Math.min(dragStart.x, mouse.gx);
+    const maxX = Math.max(dragStart.x, mouse.gx);
+    const minY = Math.min(dragStart.y, mouse.gy);
+    const maxY = Math.max(dragStart.y, mouse.gy);
+    
+    ctx.strokeStyle = '#ffcc00'; ctx.lineWidth = 2;
+    const p1 = worldToScreen(minX - 0.5, minY - 0.5);
+    const p2 = worldToScreen(maxX + 0.5, maxY + 0.5);
+    ctx.strokeRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+    
+    ctx.globalAlpha = 0.3;
+    for (let x = minX; x <= maxX; x++) {
+      for (let y = minY; y <= maxY; y++) {
+        const sp = worldToScreen(x, y);
+        drawPartAt(selectedPart, sp.x, sp.y, partRotation * Math.PI/2, camera.zoom * 0.45, PART_DEFS[selectedPart]);
+      }
+    }
+    ctx.globalAlpha = 1;
+  } else if (isDraggingDel) {
+    const minX = Math.min(dragStart.x, mouse.gx);
+    const maxX = Math.max(dragStart.x, mouse.gx);
+    const minY = Math.min(dragStart.y, mouse.gy);
+    const maxY = Math.max(dragStart.y, mouse.gy);
+    
+    ctx.strokeStyle = '#e85a20'; ctx.lineWidth = 2;
+    const p1 = worldToScreen(minX - 0.5, minY - 0.5);
+    const p2 = worldToScreen(maxX + 0.5, maxY + 0.5);
+    ctx.strokeRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+    ctx.fillStyle = 'rgba(232, 90, 32, 0.2)';
+    ctx.fillRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+  } else if (mouse.gx >= -range && mouse.gx <= range && mouse.gy >= yMin && mouse.gy <= yMax) {
     const hp = worldToScreen(mouse.gx, mouse.gy);
     ctx.strokeStyle = '#ffcc00'; ctx.lineWidth = 2;
     ctx.strokeRect(hp.x - camera.zoom*0.45, hp.y - camera.zoom*0.45, camera.zoom*0.9, camera.zoom*0.9);
@@ -870,7 +1048,6 @@ function drawGrid() {
 
 function drawPartAt(type, x, y, angle, size, def) {
   ctx.save();
-  // Canvas rotates clockwise for positive angles, but our physics rotate counter-clockwise.
   ctx.translate(x, y); ctx.rotate(-angle);
   const w = size * 0.9;
   switch(type) {
@@ -930,6 +1107,19 @@ function drawPartAt(type, x, y, angle, size, def) {
       ctx.fillStyle = def.color; ctx.strokeStyle = def.edge; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(-w, 0); ctx.lineTo(w*0.8, -w); ctx.lineTo(w*0.8, w); ctx.closePath();
       ctx.fill(); ctx.stroke(); break;
+    case 'disconnector':
+      ctx.fillStyle = def.color; ctx.strokeStyle = def.edge; ctx.lineWidth = 3;
+      ctx.fillRect(-w, -w, w*2, w*2); ctx.strokeRect(-w, -w, w*2, w*2);
+      ctx.fillStyle = def.edge;
+      ctx.font = `bold ${Math.round(w*1.2)}px monospace`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(def.groupId !== undefined ? def.groupId : '1', 0, 0);
+      break;
+    case 'parachute':
+      ctx.fillStyle = def.color; ctx.strokeStyle = def.edge; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(0, -w*0.2, w, Math.PI, 0); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-w, -w*0.2); ctx.lineTo(0, w); ctx.moveTo(w, -w*0.2); ctx.lineTo(0, w); ctx.stroke();
+      break;
   }
   ctx.restore();
 }
@@ -964,6 +1154,29 @@ function drawVehicle() {
       ctx.beginPath(); ctx.moveTo(-flameW, 0); ctx.quadraticCurveTo(0, flameLen*0.5, 0, flameLen);
       ctx.quadraticCurveTo(0, flameLen*0.5, flameW, 0); ctx.closePath(); ctx.fill();
       ctx.restore();
+    }
+  }
+
+  // Draw disconnected debris vehicles
+  for (const d of debris) {
+    for (const part of d.parts) {
+      const pw = d.getPartWorld(part);
+      const sp = worldToScreen(pw.x, pw.y);
+      drawPartAt(part.type, sp.x, sp.y, pw.rot, camera.zoom * 0.45, part);
+      
+      if ((part.type === 'thruster' || part.type === 'propeller') && d.active && d.thrustVisual > 0.1) {
+        const flameDir = pw.rot;
+        const flameLen = (1 + Math.random()*0.5) * d.thrustVisual * camera.zoom * 0.7;
+        const flameW = camera.zoom * 0.2;
+        ctx.save(); ctx.translate(sp.x, sp.y); ctx.rotate(-flameDir);
+        const g = ctx.createLinearGradient(0, 0, 0, flameLen);
+        g.addColorStop(0, 'rgba(255,255,200,0.9)'); g.addColorStop(0.3, 'rgba(255,180,40,0.8)');
+        g.addColorStop(0.7, 'rgba(255,80,20,0.5)'); g.addColorStop(1, 'rgba(255,40,0,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.moveTo(-flameW, 0); ctx.quadraticCurveTo(0, flameLen*0.5, 0, flameLen);
+        ctx.quadraticCurveTo(0, flameLen*0.5, flameW, 0); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
     }
   }
 }
@@ -1034,7 +1247,6 @@ function updatePlayHUD() {
   const zone = target.y < -5 ? 'UNDERWATER' : target.y < 500 ? 'SURFACE' : target.y < 1500 ? 'HIGH ALT' : target.y < 3500 ? 'TROPOSPHERE' : target.y < WORLD.spaceStart ? 'STRATOSPHERE' : 'SPACE';
   document.getElementById('zone').textContent = zone;
 
-  // Fix the slider on the altitude scale so it lines up mathematically 
   const y = Math.max(0, Math.min(WORLD.spaceStart, target.y));
   const sp = 1 - (y / WORLD.spaceStart);
   const si = document.getElementById('scale-indicator');
@@ -1074,7 +1286,8 @@ function loop(now) {
   }
 
   if (gameMode === 'play') {
-    if (player.inVehicle) vehicle.update(dt); else updatePlayer(dt);
+    if (player.inVehicle) vehicle.update(dt, true); else updatePlayer(dt);
+    for (const d of debris) d.update(dt, false);
   }
   updateParticles(dt);
 
