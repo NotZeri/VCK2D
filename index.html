@@ -17,7 +17,10 @@ But its called VFK(Vehicle Forge Kit)
 
 Changelog:
 
-NotZeri: Added Main Menu took so long to get that glow to look good
+lunch: well i reset chat buddy
+NotZeri: I added multiplayer btw
+lunch: Added Multiplayer
+NotZeri: Added main menu made it look goody
 
 NotZeri: Added Public Test Version and LIVE
 lunch: Aded speed mod
@@ -33,33 +36,13 @@ lunch: idk and idc
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>VFK - Vehicle Forge Kit</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -71,7 +54,6 @@ lunch: idk and idc
   .ui { position:fixed; z-index:10; pointer-events:none; }
   .ui > * { pointer-events:auto; }
   
-
   #main-menu {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
     background: linear-gradient(to bottom, #4a90e2 0%, #87ceeb 60%, #b0e0e6 100%);
@@ -114,7 +96,6 @@ lunch: idk and idc
   #menu-settings-modal .version-btn { flex: 1; padding: 10px; background: #3a3a45; border: 2px solid #111118; color: #aaa; cursor: pointer; font-family: 'Oswald', sans-serif; font-weight: 700; text-transform: uppercase; }
   #menu-settings-modal .version-btn.active { background: #20d0e8; color: #111118; }
 
- 
   .panel {
     background:#2b2b35; border:3px solid #111118;
     border-radius:2px; padding:0; box-shadow:6px 6px 0px #111118;
@@ -217,15 +198,14 @@ lunch: idk and idc
 <body>
 <canvas id="canvas"></canvas>
 
-
 <div id="main-menu">
   <div class="menu-stars"></div>
   <div class="menu-content">
     <h1 class="menu-title">VFK</h1>
     <h2 class="menu-subtitle">VEHICLE FORGE KIT 2D</h2>
     <button class="menu-btn" onclick="startGame()">SINGLE PLAYER</button>
-    <button class="menu-btn disabled">JOIN</button>
-    <button class="menu-btn disabled">HOST</button>
+    <button class="menu-btn" onclick="hostGame()">HOST</button>
+    <button class="menu-btn" onclick="joinGame()">JOIN</button>
   </div>
   <div class="menu-footer">
     <button class="menu-btn" onclick="openMenuSettings()" style="border:none; background:transparent; text-align:left;">SETTINGS</button>
@@ -244,7 +224,6 @@ lunch: idk and idc
     <button class="big-btn cool" onclick="closeMenuSettings()" style="margin-top: 20px;">CLOSE</button>
   </div>
 </div>
-
 
 <div id="build-ui" class="ui">
   <div class="panel">
@@ -304,7 +283,7 @@ lunch: idk and idc
   </div>
 </div>
 
-<!-- PLAY UI -->
+
 <div id="play-ui" class="ui" style="display:none;">
   <div class="panel">
     <div class="panel-header"><div class="title">FLIGHT DATA</div></div>
@@ -353,29 +332,11 @@ lunch: idk and idc
 (function(){
 'use strict';
 
-// # Sigma chat:
- 
-// lunch: fixed the rotation glitch FINALLY lmao
-// NotZeri: 5 stop breaking the physics engine bro
+// # Sigma multi chat:
+// lunch: MULTIPLAYER IS HERE!!?!?!???!??!??!??!*@*!&??!?@#!
+// NotZeri: ikr
+// lunch: yeah peerjs is goated
 // 5: 5_5
-// lunch: Added Public-Test for everyone lollolollololo
-// NotZeri: shut the frifkrifkrikfrikfikrki up
-// lunch: broooo it works just look at it
-// 5: 5_5
-//     : haha you don't know who writing this
-// lunch: why are you saying 5_5?
-
-
-
-// # Sigma(er) chat:
- 
-// lunch: This chat SUCKS
-// NotZeri: Shut up idiot
-// NotZeri: 5 can't even talk anymore because he can't do the Discord User-Install
-// lunch: All he has to say is "/MessageCode # Sigma Chat MESSAGEHERE"
-// NotZeri: ik
-// NotZeri: gtg
-// lunch: cya
  
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
@@ -477,16 +438,13 @@ let time = 0;
 let debris = []; 
 let nextDisconnectorId = 1;
 
-
 let currentTab = 'parts';
 let gameVersion = 'LIVE';
 let leftClickMode = 'place';
 
-
 let isDragging = false;
 let isDraggingDel = false;
 let dragStart = { x: 0, y: 0 };
-
 
 let isWiring = false;
 let wireStart = null;
@@ -498,6 +456,16 @@ for (let i = 0; i < 500; i++) stars.push({ x:(Math.random()-0.5)*800, y:3500+Mat
 for (let i = 0; i < 70; i++) clouds.push({ x:(Math.random()-0.5)*500, y:200+Math.random()*2500, w:5+Math.random()*10, h:1.2+Math.random()*1.5, drift:(Math.random()-0.5)*0.3 });
 
 const player = { x: 4, y: 18, vx: 0, vy: 0, size: 0.7, onGround: false, inWater: false, inVehicle: null, facing: 1, walkPhase: 0 };
+
+let net = {
+  peer: null,
+  isHost: false,
+  hostId: null,
+  connections: {},
+  remotePlayers: {},
+  myState: { gameMode: 'build', x:0, y:0, angle:0, thrust:0, px:0, py:0, inVeh: false },
+  lastSent: 0
+};
 
 class Vec2 { 
   constructor(x=0, y=0){ this.x=x; this.y=y; } 
@@ -551,6 +519,11 @@ function splitVehicle(veh) {
   }
   veh.parts = mainComp;
   veh.rebuildStructure();
+  
+
+  if (net.peer && veh === vehicle) {
+    broadcast({ type: 'enterWorld', build: veh.parts.map(p => ({ type: p.type, gx: p.gx, gy: p.gy, rot: p.rot, hotkey: p.hotkey, groupId: p.groupId })) });
+  }
 }
 
 class Vehicle {
@@ -569,7 +542,6 @@ class Vehicle {
   }
 
   addPart(type, gx, gy, rot) {
-
     if (type === 'hotkey') return this.applyHotkey(gx, gy);
     if (type === 'speed') return this.applySpeed(gx, gy);
     if (type === 'connector') return false;
@@ -1135,6 +1107,173 @@ window.closeMenuSettings = function() {
   document.getElementById('menu-settings-modal').style.display = 'none';
 };
 
+window.hostGame = function() {
+  const id = 'VFK-' + Math.random().toString(36).substring(2, 8);
+  net.peer = new Peer(id);
+  net.isHost = true;
+  
+  net.peer.on('open', (openId) => {
+    net.hostId = openId;
+    showToast("Hosted! Code: " + openId);
+    console.log("HOST CODE: " + openId);
+    startGame();
+  });
+  
+  net.peer.on('connection', (conn) => {
+    conn.on('open', () => {
+      net.connections[conn.peer] = conn;
+      setupConn(conn);
+      for (const pid in net.remotePlayers) {
+        if (net.remotePlayers[pid].build) {
+          conn.send({ type: 'enterWorld', build: net.remotePlayers[pid].build, senderIdOverride: pid });
+        }
+      }
+    });
+  });
+  
+  net.peer.on('error', (err) => {
+    showToast("Peer Error: " + err.type);
+    console.error(err);
+  });
+};
+
+window.joinGame = function() {
+  const id = prompt("Enter Host Code:");
+  if (!id) return;
+  
+  net.peer = new Peer();
+  net.isHost = false;
+  
+  net.peer.on('open', (myId) => {
+    const conn = net.peer.connect(id, {reliable: true});
+    conn.on('open', () => {
+      net.hostId = id;
+      net.connections[id] = conn;
+      setupConn(conn);
+      startGame();
+      showToast("Joined Host!");
+    });
+  });
+  
+  net.peer.on('error', (err) => {
+    showToast("Error: " + err.type);
+    console.error(err);
+  });
+};
+
+function setupConn(conn) {
+  conn.on('data', (data) => {
+    handleData(conn.peer, data);
+  });
+  conn.on('close', () => {
+    delete net.connections[conn.peer];
+    delete net.remotePlayers[conn.peer];
+    if (net.isHost) {
+    } else {
+      showToast("Disconnected from host.");
+    }
+  });
+}
+
+function broadcast(msg) {
+  if (!net.peer) return;
+  if (net.isHost) {
+    for (const id in net.connections) {
+      net.connections[id].send(msg);
+    }
+  } else {
+    if (net.connections[net.hostId]) {
+      net.connections[net.hostId].send(msg);
+    }
+  }
+}
+
+function handleData(senderId, data) {
+  const targetId = data.senderIdOverride || senderId;
+  
+  if (data.type === 'enterWorld') {
+    if (!net.remotePlayers[targetId]) net.remotePlayers[targetId] = { gameMode: 'build' };
+    const rp = net.remotePlayers[targetId];
+    rp.gameMode = 'play';
+    rp.build = data.build;
+    rp.vehicle = new Vehicle();
+    rp.vehicle.parts = data.build.map(p => ({...p, id: Math.random().toString(36).substr(2,9)}));
+    rp.vehicle.recalc();
+    rp.vehicle.activated = true;
+    rp.x = rp.x || 0; rp.y = rp.y || 0; rp.angle = rp.angle || 0;
+    
+    if (net.isHost) {
+      for (const id in net.connections) {
+        if (id !== senderId) {
+          net.connections[id].send({ type: 'enterWorld', build: data.build, senderIdOverride: targetId });
+        }
+      }
+    }
+  } else if (data.type === 'exitWorld') {
+    if (net.remotePlayers[targetId]) {
+      net.remotePlayers[targetId].gameMode = 'build';
+      delete net.remotePlayers[targetId].vehicle;
+    }
+    if (net.isHost) {
+      for (const id in net.connections) {
+        if (id !== senderId) {
+          net.connections[id].send({ type: 'exitWorld', senderIdOverride: targetId });
+        }
+      }
+    }
+  } else if (data.type === 'myState') {
+    if (net.isHost) {
+      net.remotePlayers[senderId] = data.state;
+    }
+  } else if (data.type === 'state') {
+    for (const id in data.players) {
+      if (id === net.peer.id) continue;
+      if (!net.remotePlayers[id]) net.remotePlayers[id] = {};
+      const incoming = data.players[id];
+      const existing = net.remotePlayers[id];
+      
+      existing.gameMode = incoming.gameMode;
+      existing.x = incoming.x; existing.y = incoming.y; existing.angle = incoming.angle;
+      existing.thrust = incoming.thrust;
+      existing.px = incoming.px; existing.py = incoming.py; existing.inVeh = incoming.inVeh;
+    }
+  }
+}
+
+function sendNetData() {
+  if (!net.peer) return;
+  const now = Date.now();
+  if (now - net.lastSent < 50) return; // Guess what? It's 20 TPS yayayay
+  net.lastSent = now;
+
+  net.myState.gameMode = gameMode;
+  if (gameMode === 'play') {
+    if (player.inVehicle) {
+      net.myState.x = vehicle.position.x;
+      net.myState.y = vehicle.position.y;
+      net.myState.angle = vehicle.angle;
+      net.myState.thrust = vehicle.thrustVisual;
+      net.myState.inVeh = true;
+    } else {
+      net.myState.px = player.x;
+      net.myState.py = player.y;
+      net.myState.inVeh = false;
+    }
+  }
+  
+  if (net.isHost) {
+    const fullState = { type: 'state', players: net.remotePlayers };
+    fullState.players[net.peer.id] = { ...net.myState, build: null };
+    for (const id in net.connections) {
+      net.connections[id].send(fullState);
+    }
+  } else {
+    if (net.connections[net.hostId]) {
+      net.connections[net.hostId].send({ type: 'myState', state: net.myState });
+    }
+  }
+}
+
 function loadPrefabs() {
   const saved = localStorage.getItem('vfk_prefabs');
   if (saved) prefabs = JSON.parse(saved);
@@ -1212,6 +1351,11 @@ function enterWorld() {
   const prompt = document.getElementById('enter-prompt');
   prompt.classList.add('show');
   prompt.textContent = "PRESS F TO ENTER VEHICLE";
+  
+  const buildData = vehicle.parts.map(p => ({
+    type: p.type, gx: p.gx, gy: p.gy, rot: p.rot, hotkey: p.hotkey, groupId: p.groupId
+  }));
+  broadcast({ type: 'enterWorld', build: buildData });
 }
 
 function backToBuild() {
@@ -1224,6 +1368,8 @@ function backToBuild() {
   document.getElementById('play-help').style.display = 'none';
   document.getElementById('alt-scale').style.display = 'none';
   document.getElementById('enter-prompt').classList.remove('show');
+  
+  broadcast({ type: 'exitWorld' });
 }
 
 function showToast(msg) {
@@ -1584,6 +1730,53 @@ function drawPartAt(type, x, y, angle, size, def) {
   ctx.restore();
 }
 
+function drawRemoteVehicles() {
+  for (const id in net.remotePlayers) {
+    if (id === (net.peer ? net.peer.id : 'me')) continue;
+    const rp = net.remotePlayers[id];
+    if (rp.gameMode !== 'play' || !rp.vehicle) continue;
+    
+    if (rp.x === undefined) continue;
+    rp.drawX = rp.drawX === undefined ? rp.x : rp.drawX + (rp.x - rp.drawX) * 0.2;
+    rp.drawY = rp.drawY === undefined ? rp.y : rp.drawY + (rp.y - rp.drawY) * 0.2;
+    rp.drawAngle = rp.drawAngle === undefined ? rp.angle : rp.drawAngle + (rp.angle - rp.drawAngle) * 0.2;
+    
+    rp.vehicle.position.x = rp.drawX;
+    rp.vehicle.position.y = rp.drawY;
+    rp.vehicle.angle = rp.drawAngle;
+    rp.vehicle.thrustVisual = rp.thrust || 0;
+
+    for (const part of rp.vehicle.parts) {
+      const pw = rp.vehicle.getPartWorld(part);
+      const sp = worldToScreen(pw.x, pw.y);
+      drawPartAt(part.type, sp.x, sp.y, pw.rot, camera.zoom * 0.45, part);
+
+      if ((part.type === 'thruster' || part.type === 'propeller') && rp.vehicle.thrustVisual > 0.1) {
+        const flameDir = pw.rot;
+        const flameLen = (1 + Math.random()*0.5) * rp.vehicle.thrustVisual * camera.zoom * 0.7;
+        const flameW = camera.zoom * 0.2;
+        ctx.save(); ctx.translate(sp.x, sp.y); ctx.rotate(-flameDir);
+        const g = ctx.createLinearGradient(0, 0, 0, flameLen);
+        g.addColorStop(0, 'rgba(255,255,200,0.9)'); g.addColorStop(0.3, 'rgba(255,180,40,0.8)');
+        g.addColorStop(0.7, 'rgba(255,80,20,0.5)'); g.addColorStop(1, 'rgba(255,40,0,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.moveTo(-flameW, 0); ctx.quadraticCurveTo(0, flameLen*0.5, 0, flameLen);
+        ctx.quadraticCurveTo(0, flameLen*0.5, flameW, 0); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    if (!rp.inVeh) {
+      const sp = worldToScreen(rp.px, rp.py);
+      const size = camera.zoom * 0.35;
+      ctx.fillStyle = '#4080ff';
+      ctx.fillRect(sp.x - size, sp.y - size, size*2, size*2);
+      ctx.strokeStyle = '#2060cc';
+      ctx.strokeRect(sp.x - size, sp.y - size, size*2, size*2);
+    }
+  }
+}
+
 function drawVehicle() {
   if (gameMode === 'play' && !player.inVehicle && vehicle.hasCockpit) {
     for (const part of vehicle.parts) {
@@ -1754,7 +1947,9 @@ function loop(now) {
   if (gameMode === 'build') updateBuildStats();
   if (gameMode === 'play') updatePlayHUD();
 
-  drawSky(); drawTerrain(); drawDecor(); drawWater(); drawDock(); drawGrid(); drawParticles(); drawVehicle(); drawPlayer();
+  drawSky(); drawTerrain(); drawDecor(); drawWater(); drawDock(); drawGrid(); drawParticles(); drawVehicle(); drawRemoteVehicles(); drawPlayer();
+  
+  sendNetData();
 
   requestAnimationFrame(loop);
 }
