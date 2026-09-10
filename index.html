@@ -17,6 +17,8 @@ But its called VFK(Vehicle Forge Kit)
 
 Changelog:
 
+NotZeri: Added Main Menu took so long to get that glow to look good
+
 NotZeri: Added Public Test Version and LIVE
 lunch: Aded speed mod
 NotZeri: Added Wiring
@@ -25,23 +27,6 @@ NotZeri: Changed the name because people think as soon as there is a em dash it'
 lunch: idk and idc
 5: Wow i can talk in cjnage log
 -->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -86,6 +71,50 @@ lunch: idk and idc
   .ui { position:fixed; z-index:10; pointer-events:none; }
   .ui > * { pointer-events:auto; }
   
+
+  #main-menu {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: linear-gradient(to bottom, #4a90e2 0%, #87ceeb 60%, #b0e0e6 100%);
+    z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center;
+    overflow: hidden;
+  }
+  .menu-stars {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: 
+      radial-gradient(white 1px, transparent 1px),
+      radial-gradient(white 1px, transparent 1px);
+    background-size: 50px 50px, 100px 100px;
+    background-position: 0 0, 25px 25px;
+    opacity: 0.4;
+  }
+  .menu-content { text-align: center; z-index: 2; }
+  .menu-title { font-family: 'Oswald', sans-serif; font-size: 100px; font-weight: 700; color: #fff; letter-spacing: 10px; text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.3); margin-bottom: 0; }
+  .menu-subtitle { font-family: 'Oswald', sans-serif; font-size: 16px; color: #f0f8ff; letter-spacing: 12px; margin-bottom: 50px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+  .menu-btn {
+    background: transparent; border: none; color: #fff; font-family: 'Oswald', sans-serif;
+    font-size: 26px; font-weight: 600; letter-spacing: 4px; padding: 12px 20px; margin: 8px 0;
+    cursor: pointer; transition: all 0.2s; text-transform: uppercase; display: block; width: 100%;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+  }
+  .menu-btn:hover { color: #ffcc00; text-shadow: 0 0 15px rgba(255, 255, 255, 0.8); }
+  .menu-btn.disabled { color: #555; text-decoration: line-through; cursor: not-allowed; text-shadow: none; }
+  .menu-btn.disabled:hover { color: #555; text-shadow: none; }
+  .menu-footer { position: absolute; bottom: 40px; left: 40px; z-index: 2; }
+  .menu-footer .menu-btn { font-size: 18px; text-align: left; padding: 10px 0; }
+  
+  #menu-settings-modal {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: #2b2b35; border: 3px solid #111118; box-shadow: 6px 6px 0px #111118;
+    padding: 30px; z-index: 1001; width: 320px; display: none;
+  }
+  #menu-settings-modal .title { text-align: center; margin-bottom: 20px; color: #ffcc00; font-family: 'Oswald', sans-serif; font-size: 20px; letter-spacing: 2px; }
+  #menu-settings-modal .settings-row { margin-top: 10px; }
+  #menu-settings-modal .settings-label { font-size: 12px; color: #aaa; text-transform: uppercase; margin-bottom: 8px; font-weight: 700; }
+  #menu-settings-modal .version-btns { display: flex; gap: 8px; }
+  #menu-settings-modal .version-btn { flex: 1; padding: 10px; background: #3a3a45; border: 2px solid #111118; color: #aaa; cursor: pointer; font-family: 'Oswald', sans-serif; font-weight: 700; text-transform: uppercase; }
+  #menu-settings-modal .version-btn.active { background: #20d0e8; color: #111118; }
+
+ 
   .panel {
     background:#2b2b35; border:3px solid #111118;
     border-radius:2px; padding:0; box-shadow:6px 6px 0px #111118;
@@ -96,7 +125,7 @@ lunch: idk and idc
   }
   .panel-content { padding: 16px; }
 
-  #build-ui { top:18px; left:18px; width:260px; max-height:calc(100vh - 120px); overflow-y:auto; }
+  #build-ui { top:18px; left:18px; width:260px; max-height:calc(100vh - 120px); overflow-y:auto; display:none; }
   
   ::-webkit-scrollbar { width: 8px; }
   ::-webkit-scrollbar-track { background: #1a1a1f; }
@@ -157,7 +186,7 @@ lunch: idk and idc
   .version-btn { flex: 1; padding: 10px; background: #3a3a45; border: 2px solid #111118; color: #aaa; cursor: pointer; font-family: 'Oswald', sans-serif; font-weight: 700; text-transform: uppercase; }
   .version-btn.active { background: #20d0e8; color: #111118; }
   
-  #play-ui { top:18px; left:18px; width:260px; }
+  #play-ui { top:18px; left:18px; width:260px; display:none; }
   .hud-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:9px; font-size:12px; text-transform:uppercase; }
   .hud-label { color:#888; letter-spacing:1.5px; font-weight:600; font-size:10px; }
   .hud-value { font-weight:700; color:#ffcc00; font-size:14px; font-family:'JetBrains Mono',monospace; }
@@ -176,7 +205,7 @@ lunch: idk and idc
   .scale-label { position:absolute; left:36px; font-size:10px; color:#aaa; white-space:nowrap; font-weight:700; text-transform:uppercase; transform: translateY(-50%); }
   .scale-indicator { position:absolute; left:12px; width:16px; height:16px; background:#e85a20; border:2px solid #111118; border-radius:50%; transform: translate(-1px, -50%); transition:top .15s; }
   
-  #controls-help { bottom:18px; left:50%; transform:translateX(-50%); }
+  #controls-help { bottom:18px; left:50%; transform:translateX(-50%); display:none; }
   .help-text { background:#2b2b35; border:3px solid #111118; box-shadow:6px 6px 0px #111118; padding:10px 20px; font-size:11px; color:#aaa; font-weight:700; text-transform:uppercase; text-align:center; }
   .help-text strong { color:#ffcc00; }
   .key { display:inline-block; padding:3px 8px; margin:0 3px; background:#1a1a1f; border:2px solid #4a4a55; color:#fff; font-size:10px; box-shadow:2px 2px 0px #111118; }
@@ -187,6 +216,35 @@ lunch: idk and idc
 </head>
 <body>
 <canvas id="canvas"></canvas>
+
+
+<div id="main-menu">
+  <div class="menu-stars"></div>
+  <div class="menu-content">
+    <h1 class="menu-title">VFK</h1>
+    <h2 class="menu-subtitle">VEHICLE FORGE KIT 2D</h2>
+    <button class="menu-btn" onclick="startGame()">SINGLE PLAYER</button>
+    <button class="menu-btn disabled">JOIN</button>
+    <button class="menu-btn disabled">HOST</button>
+  </div>
+  <div class="menu-footer">
+    <button class="menu-btn" onclick="openMenuSettings()" style="border:none; background:transparent; text-align:left;">SETTINGS</button>
+  </div>
+  
+  <div id="menu-settings-modal">
+    <div class="title">SETTINGS</div>
+    <div class="settings-row">
+      <div class="settings-label">Game Version</div>
+      <div class="version-btns">
+        <button class="version-btn active" id="menu-ver-live" onclick="setVersion('LIVE')">LIVE</button>
+        <button class="version-btn" id="menu-ver-test" onclick="setVersion('Public-Test')">Public-Test</button>
+      </div>
+      <div style="font-size:10px; color:#777; margin-top:8px;">Public-Test enables Wiring blocks (Hotkeys, Activators, Connectors, Speed).</div>
+    </div>
+    <button class="big-btn cool" onclick="closeMenuSettings()" style="margin-top: 20px;">CLOSE</button>
+  </div>
+</div>
+
 
 <div id="build-ui" class="ui">
   <div class="panel">
@@ -246,6 +304,7 @@ lunch: idk and idc
   </div>
 </div>
 
+<!-- PLAY UI -->
 <div id="play-ui" class="ui" style="display:none;">
   <div class="panel">
     <div class="panel-header"><div class="title">FLIGHT DATA</div></div>
@@ -1048,16 +1107,32 @@ window.switchTab = function(tab) {
 
 window.setVersion = function(v) {
   gameVersion = v;
-  document.getElementById('ver-live').classList.toggle('active', v === 'LIVE');
-  document.getElementById('ver-test').classList.toggle('active', v === 'Public-Test');
+  document.getElementById('ver-live')?.classList.toggle('active', v === 'LIVE');
+  document.getElementById('ver-test')?.classList.toggle('active', v === 'Public-Test');
+  document.getElementById('menu-ver-live')?.classList.toggle('active', v === 'LIVE');
+  document.getElementById('menu-ver-test')?.classList.toggle('active', v === 'Public-Test');
   buildPartsGrid();
   showToast(`Switched to ${v} version`);
 };
 
 window.setDragMode = function(m) {
   leftClickMode = m;
-  document.getElementById('mode-place').classList.toggle('active', m === 'place');
-  document.getElementById('mode-delete').classList.toggle('active', m === 'delete');
+  document.getElementById('mode-place')?.classList.toggle('active', m === 'place');
+  document.getElementById('mode-delete')?.classList.toggle('active', m === 'delete');
+};
+
+window.startGame = function() {
+  document.getElementById('main-menu').style.display = 'none';
+  document.getElementById('build-ui').style.display = 'block';
+  document.getElementById('controls-help').style.display = 'block';
+};
+
+window.openMenuSettings = function() {
+  document.getElementById('menu-settings-modal').style.display = 'block';
+};
+
+window.closeMenuSettings = function() {
+  document.getElementById('menu-settings-modal').style.display = 'none';
 };
 
 function loadPrefabs() {
