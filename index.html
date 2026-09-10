@@ -17,10 +17,7 @@ But its called VFK(Vehicle Forge Kit)
 
 Changelog:
 
-lunch: well i reset chat buddy
-NotZeri: I added multiplayer btw
-lunch: Added Multiplayer
-NotZeri: Added main menu made it look goody
+NotZeri: Multiplayer!!
 
 NotZeri: Added Public Test Version and LIVE
 lunch: Aded speed mod
@@ -30,7 +27,6 @@ NotZeri: Changed the name because people think as soon as there is a em dash it'
 lunch: idk and idc
 5: Wow i can talk in cjnage log
 -->
-
 
 
 
@@ -54,6 +50,7 @@ lunch: idk and idc
   .ui { position:fixed; z-index:10; pointer-events:none; }
   .ui > * { pointer-events:auto; }
   
+
   #main-menu {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
     background: linear-gradient(to bottom, #4a90e2 0%, #87ceeb 60%, #b0e0e6 100%);
@@ -95,6 +92,7 @@ lunch: idk and idc
   #menu-settings-modal .version-btns { display: flex; gap: 8px; }
   #menu-settings-modal .version-btn { flex: 1; padding: 10px; background: #3a3a45; border: 2px solid #111118; color: #aaa; cursor: pointer; font-family: 'Oswald', sans-serif; font-weight: 700; text-transform: uppercase; }
   #menu-settings-modal .version-btn.active { background: #20d0e8; color: #111118; }
+
 
   .panel {
     background:#2b2b35; border:3px solid #111118;
@@ -156,7 +154,7 @@ lunch: idk and idc
   .big-btn.cool:hover { background:#40e0ff; }
 
   .prefab-item { display:flex; justify-content:space-between; align-items:center; background:#3a3a45; border:2px solid #111118; padding:8px; margin-top:8px; cursor:grab; }
-  .prefab-item:hover { background:#4a4a55; border-color:#ffcc00; }
+  .prefab-item:hover { background:#4a4a45; border-color:#ffcc00; }
   .prefab-name { font-size:12px; font-weight:700; color:#fff; text-transform:uppercase; }
   .prefab-del { background:#e85a20; color:#111118; border:1px solid #111118; padding:4px 8px; cursor:pointer; font-weight:700; }
   .prefab-del:hover { background:#ff7040; }
@@ -198,6 +196,7 @@ lunch: idk and idc
 <body>
 <canvas id="canvas"></canvas>
 
+
 <div id="main-menu">
   <div class="menu-stars"></div>
   <div class="menu-content">
@@ -224,6 +223,7 @@ lunch: idk and idc
     <button class="big-btn cool" onclick="closeMenuSettings()" style="margin-top: 20px;">CLOSE</button>
   </div>
 </div>
+
 
 <div id="build-ui" class="ui">
   <div class="panel">
@@ -261,6 +261,14 @@ lunch: idk and idc
       <div id="settings-tab" style="display:none;">
         <div class="title" style="color:#ffcc00; margin-bottom:12px;">SETTINGS</div>
         
+        <div class="settings-row">
+          <div class="settings-label">Multiplayer Code</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <input type="text" id="mp-code" value="Not Connected" readonly style="flex:1; padding:10px; background:#1a1a1f; border:2px solid #111118; color:#fff; font-family:'JetBrains Mono',monospace; text-align:center; font-size:12px;">
+            <button class="version-btn" onclick="copyMpCode()" style="width:60px; padding:10px 0;">COPY</button>
+          </div>
+        </div>
+
         <div class="settings-row">
           <div class="settings-label">Left-Click Drag Mode</div>
           <div class="version-btns">
@@ -332,8 +340,8 @@ lunch: idk and idc
 (function(){
 'use strict';
 
-// # Sigma multi chat:
-// lunch: MULTIPLAYER IS HERE!!?!?!???!??!??!??!*@*!&??!?@#!
+// # Sigma chat:
+// lunch: MULTIPLAYER IS HERE
 // NotZeri: ikr
 // lunch: yeah peerjs is goated
 // 5: 5_5
@@ -457,6 +465,7 @@ for (let i = 0; i < 70; i++) clouds.push({ x:(Math.random()-0.5)*500, y:200+Math
 
 const player = { x: 4, y: 18, vx: 0, vy: 0, size: 0.7, onGround: false, inWater: false, inVehicle: null, facing: 1, walkPhase: 0 };
 
+
 let net = {
   peer: null,
   isHost: false,
@@ -520,7 +529,6 @@ function splitVehicle(veh) {
   veh.parts = mainComp;
   veh.rebuildStructure();
   
-
   if (net.peer && veh === vehicle) {
     broadcast({ type: 'enterWorld', build: veh.parts.map(p => ({ type: p.type, gx: p.gx, gy: p.gy, rot: p.rot, hotkey: p.hotkey, groupId: p.groupId })) });
   }
@@ -1107,6 +1115,24 @@ window.closeMenuSettings = function() {
   document.getElementById('menu-settings-modal').style.display = 'none';
 };
 
+function copyToClipboard(text) {
+  const inp = document.createElement('input');
+  inp.value = text;
+  document.body.appendChild(inp);
+  inp.select();
+  try {
+    document.execCommand('copy');
+  } catch (err) {}
+  document.body.removeChild(inp);
+}
+
+window.copyMpCode = function() {
+  const code = document.getElementById('mp-code').value;
+  if (code === 'Not Connected') return;
+  copyToClipboard(code);
+  showToast("Code copied to clipboard!");
+};
+
 window.hostGame = function() {
   const id = 'VFK-' + Math.random().toString(36).substring(2, 8);
   net.peer = new Peer(id);
@@ -1114,8 +1140,9 @@ window.hostGame = function() {
   
   net.peer.on('open', (openId) => {
     net.hostId = openId;
-    showToast("Hosted! Code: " + openId);
-    console.log("HOST CODE: " + openId);
+    document.getElementById('mp-code').value = openId;
+    copyToClipboard(openId);
+    showToast("Hosted! Code copied to clipboard");
     startGame();
   });
   
@@ -1150,6 +1177,7 @@ window.joinGame = function() {
       net.hostId = id;
       net.connections[id] = conn;
       setupConn(conn);
+      document.getElementById('mp-code').value = id;
       startGame();
       showToast("Joined Host!");
     });
@@ -1191,15 +1219,35 @@ function broadcast(msg) {
 function handleData(senderId, data) {
   const targetId = data.senderIdOverride || senderId;
   
-  if (data.type === 'enterWorld') {
+    if (data.type === 'enterWorld') {
     if (!net.remotePlayers[targetId]) net.remotePlayers[targetId] = { gameMode: 'build' };
     const rp = net.remotePlayers[targetId];
     rp.gameMode = 'play';
     rp.build = data.build;
     rp.vehicle = new Vehicle();
-    rp.vehicle.parts = data.build.map(p => ({...p, id: Math.random().toString(36).substr(2,9)}));
-    rp.vehicle.recalc();
-    rp.vehicle.activated = true;
+    
+
+    rp.vehicle.parts = data.build.map(p => {
+      const def = PART_DEFS[p.type];
+      return {
+        ...p,
+        id: Math.random().toString(36).substr(2,9),
+        mass: def.mass,
+        color: def.color,
+        edge: def.edge,
+        thrust: def.thrust || 0,
+        fuelUse: def.fuelUse || 0,
+        fuelCap: def.fuelCap || 0,
+        liftCoef: def.liftCoef || 0,
+        volume: def.volume || 0,
+        dragCoef: def.dragCoef || 0,
+        waterOnly: def.waterOnly || false,
+        parachuteDrag: def.parachuteDrag || 0,
+        localX: 0, localY: 0
+      };
+    });
+    
+    rp.vehicle.activate();
     rp.x = rp.x || 0; rp.y = rp.y || 0; rp.angle = rp.angle || 0;
     
     if (net.isHost) {
@@ -1209,21 +1257,15 @@ function handleData(senderId, data) {
         }
       }
     }
-  } else if (data.type === 'exitWorld') {
-    if (net.remotePlayers[targetId]) {
-      net.remotePlayers[targetId].gameMode = 'build';
-      delete net.remotePlayers[targetId].vehicle;
-    }
-    if (net.isHost) {
-      for (const id in net.connections) {
-        if (id !== senderId) {
-          net.connections[id].send({ type: 'exitWorld', senderIdOverride: targetId });
-        }
-      }
-    }
   } else if (data.type === 'myState') {
     if (net.isHost) {
-      net.remotePlayers[senderId] = data.state;
+      if (!net.remotePlayers[senderId]) net.remotePlayers[senderId] = {};
+      const incoming = data.state;
+      const existing = net.remotePlayers[senderId];
+      existing.gameMode = incoming.gameMode;
+      existing.x = incoming.x; existing.y = incoming.y; existing.angle = incoming.angle;
+      existing.thrust = incoming.thrust;
+      existing.px = incoming.px; existing.py = incoming.py; existing.inVeh = incoming.inVeh;
     }
   } else if (data.type === 'state') {
     for (const id in data.players) {
@@ -1233,9 +1275,9 @@ function handleData(senderId, data) {
       const existing = net.remotePlayers[id];
       
       existing.gameMode = incoming.gameMode;
-      existing.x = incoming.x; existing.y = incoming.y; existing.angle = incoming.angle;
-      existing.thrust = incoming.thrust;
-      existing.px = incoming.px; existing.py = incoming.py; existing.inVeh = incoming.inVeh;
+      existing.x = incoming.x || 0; existing.y = incoming.y || 0; existing.angle = incoming.angle || 0;
+      existing.thrust = incoming.thrust || 0;
+      existing.px = incoming.px || 0; existing.py = incoming.py || 0; existing.inVeh = incoming.inVeh || false;
     }
   }
 }
@@ -1243,27 +1285,39 @@ function handleData(senderId, data) {
 function sendNetData() {
   if (!net.peer) return;
   const now = Date.now();
-  if (now - net.lastSent < 50) return; // Guess what? It's 20 TPS yayayay
+  if (now - net.lastSent < 50) return; // 20 TPS yayyayayayyayya
   net.lastSent = now;
 
   net.myState.gameMode = gameMode;
   if (gameMode === 'play') {
-    if (player.inVehicle) {
+    if (vehicle.activated) {
       net.myState.x = vehicle.position.x;
       net.myState.y = vehicle.position.y;
       net.myState.angle = vehicle.angle;
+    }
+    
+    if (player.inVehicle) {
       net.myState.thrust = vehicle.thrustVisual;
       net.myState.inVeh = true;
     } else {
       net.myState.px = player.x;
       net.myState.py = player.y;
       net.myState.inVeh = false;
+      net.myState.thrust = 0;
     }
   }
   
   if (net.isHost) {
-    const fullState = { type: 'state', players: net.remotePlayers };
-    fullState.players[net.peer.id] = { ...net.myState, build: null };
+    const playersState = {};
+    playersState[net.peer.id] = net.myState;
+    for (const id in net.remotePlayers) {
+      const rp = net.remotePlayers[id];
+      playersState[id] = {
+        gameMode: rp.gameMode, x: rp.x, y: rp.y, angle: rp.angle, thrust: rp.thrust,
+        px: rp.px, py: rp.py, inVeh: rp.inVeh
+      };
+    }
+    const fullState = { type: 'state', players: playersState };
     for (const id in net.connections) {
       net.connections[id].send(fullState);
     }
@@ -1273,6 +1327,7 @@ function sendNetData() {
     }
   }
 }
+
 
 function loadPrefabs() {
   const saved = localStorage.getItem('vfk_prefabs');
@@ -1340,8 +1395,11 @@ function enterWorld() {
   if (!vehicle.hasCockpit) { showToast('Cockpit required!'); return; }
   gameMode = 'play';
   vehicle.resetToGrid();
+  vehicle.activate();
+  vehicle.active = true; 
   debris = []; 
-  player.x = 4; player.y = 18; player.vx = 0; player.vy = 0; player.inVehicle = null;
+  player.x = vehicle.position.x + 2.5; player.y = vehicle.position.y;
+  player.vx = 0; player.vy = 0; player.inVehicle = null;
   document.getElementById('build-ui').style.display = 'none';
   document.getElementById('play-ui').style.display = 'block';
   document.getElementById('build-help').style.display = 'none';
