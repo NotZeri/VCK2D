@@ -3,3 +3,5 @@
 ---
 
 This is a remake of a VR game called Vehicle Construction Kit.
+
+![Photo](image.png)
