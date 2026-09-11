@@ -432,6 +432,9 @@ const PART_DEFS = {
   hotkey:      { name:'Hotkey',      mass:0.0, color:'#9090ff', edge:'#4040a0', desc:'Assign a hotkey to a block (Public-Test)' },
   speed:       { name:'Speed Mod',   mass:0.0, color:'#40ff90', edge:'#10a040', desc:'Modifies vehicle max speed (Public-Test)' },
   connector:   { name:'Connector',   mass:0.0, color:'#ffcc00', edge:'#a88800', desc:'Drag between blocks to wire them (Public-Test)' },
+  // Cosmetcisiciscisicis :OOOOO
+  solarpanel:   { name:'Solar Panel',   mass:0.5, color:'#2030a0', edge:'#101040', desc:'Generates power in sunlight (Cosmetic)' },
+ 
 };
 
 let gameMode = 'build';
@@ -1072,6 +1075,8 @@ function getPartIconSVG(type, def) {
     case 'hotkey': return `<svg width="26" height="26" viewBox="0 0 26 26"><rect x="4" y="4" width="18" height="18" fill="${c}" stroke="${e}" stroke-width="2"/><text x="13" y="17" font-family="monospace" font-size="12" fill="${e}" text-anchor="middle">H</text></svg>`;
     case 'speed': return `<svg width="26" height="26" viewBox="0 0 26 26"><rect x="4" y="4" width="18" height="18" fill="${c}" stroke="${e}" stroke-width="2"/><text x="13" y="17" font-family="monospace" font-size="10" fill="${e}" text-anchor="middle">SP</text></svg>`;
     case 'connector': return `<svg width="26" height="26" viewBox="0 0 26 26"><rect x="4" y="4" width="18" height="18" fill="${c}" stroke="${e}" stroke-width="2"/><circle cx="13" cy="13" r="3" fill="${e}"/></svg>`;
+    case 'solarpanel': return `<svg width="26" height="26" viewBox="0 0 26 26"><rect x="4" y="4" width="18" height="18" fill="${c}" stroke="${e}" stroke-width="2"/><line x1="13" y1="4" x2="13" y2="22" stroke="${e}" stroke-width="1"/><line x1="4" y1="13" x2="22" y2="13" stroke="${e}" stroke-width="1"/></svg>`;
+    // NotZeri: Thank you for solar panel for Icon
   }
   return '';
 }
@@ -1783,6 +1788,23 @@ function drawPartAt(type, x, y, angle, size, def) {
       ctx.fillStyle = def.color; ctx.strokeStyle = def.edge; ctx.lineWidth = 3;
       ctx.fillRect(-w, -w, w*2, w*2); ctx.strokeRect(-w, -w, w*2, w*2);
       ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, w*0.4, 0, Math.PI*2); ctx.fill();
+      break;
+
+    // NotZeri: Did you use ai for the Solar Panel model???
+    case 'solarpanel':
+      // Base plate
+      ctx.fillStyle = '#303050'; ctx.strokeStyle = def.edge; ctx.lineWidth = 3;
+      ctx.fillRect(-w, -w, w*2, w*2); ctx.strokeRect(-w, -w, w*2, w*2);
+      
+      // Solar cells (blue with grid lines)
+      ctx.fillStyle = def.color;
+      ctx.fillRect(-w*0.8, -w*0.8, w*1.6, w*1.6);
+      
+      ctx.strokeStyle = def.edge; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, -w*0.8); ctx.lineTo(0, w*0.8);
+      ctx.moveTo(-w*0.8, 0); ctx.lineTo(w*0.8, 0);
+      ctx.stroke();
       break;
   }
   ctx.restore();
