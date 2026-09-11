@@ -2,6 +2,7 @@
 Made by:
 lunch(forgot his name lowkey)
 NotZeri(ellodeez)
+5(5_5)
 
 Tested by:
 cookie(jacob)
@@ -17,19 +18,11 @@ But its called VFK(Vehicle Forge Kit)
 
 Changelog:
 
+NotZeri: Added Setting for the Camera Smoothness
+NotZeri: Solar Panels have been added they are just cosmetics
 NotZeri: Multiplayer!!
-
-NotZeri: Added Public Test Version and LIVE
-lunch: Aded speed mod
-NotZeri: Added Wiring
-
-NotZeri: Changed the name because people think as soon as there is a em dash it's AI
-lunch: idk and idc
-5: Wow i can talk in cjnage log
+NotZeri: Reset Change log because it's filling up a lot
 -->
-
-
-
 
 
 <!DOCTYPE html>
@@ -270,6 +263,11 @@ lunch: idk and idc
         </div>
 
         <div class="settings-row">
+          <div class="settings-label">Camera Smoothness</div>
+          <input type="range" id="cam-smooth-slider" min="0" max="100" value="0" style="width:100%;" oninput="setCamSmooth(this.value)">
+        </div>
+
+        <div class="settings-row">
           <div class="settings-label">Left-Click Drag Mode</div>
           <div class="version-btns">
             <button class="version-btn active" id="mode-place" onclick="setDragMode('place')">Place</button>
@@ -422,7 +420,7 @@ const PART_DEFS = {
   cockpit:     { name:'Cockpit',     mass:1.5, color:'#20d0e8', edge:'#1080a0', desc:'Control center (required)' },
   propeller:   { name:'Propeller',   mass:1.0, color:'#3080e8', edge:'#1040a0', thrust:120, fuelUse:2, waterOnly:true, desc:'Water propulsion only' },
   wing:        { name:'Wing',        mass:0.8, color:'#c0c8d0', edge:'#707880', liftCoef:2.5, desc:'Generates lift in air' },
-  buoyancy:    { name:'Buoyancy',    mass:0.5, color:'#20e8b0', edge:'#10a080', volume:6, desc:'Floats in water (submarines)' },
+  buoyancy:      { name:'Buoyancy',    mass:0.5, color:'#20e8b0', edge:'#10a080', volume:6, desc:'Floats in water (submarines)' },
   fin:         { name:'Fin',         mass:0.5, color:'#d0d8e0', edge:'#808890', dragCoef:3.5, desc:'Stabilizes movement' },
   disconnector:{ name:'Disconnector', mass:0.5, color:'#d0d020', edge:'#a0a010', desc:'Disconnects parts (Press 1-0)' },
   parachute:   { name:'Parachute',    mass:0.5, color:'#ffffff', edge:'#cccccc', parachuteDrag:10, desc:'Slows down falling speed' },
@@ -433,8 +431,7 @@ const PART_DEFS = {
   speed:       { name:'Speed Mod',   mass:0.0, color:'#40ff90', edge:'#10a040', desc:'Modifies vehicle max speed (Public-Test)' },
   connector:   { name:'Connector',   mass:0.0, color:'#ffcc00', edge:'#a88800', desc:'Drag between blocks to wire them (Public-Test)' },
   // Cosmetcisiciscisicis :OOOOO
-  solarpanel:   { name:'Solar Panel',   mass:0.5, color:'#2030a0', edge:'#101040', desc:'Generates power in sunlight (Cosmetic)' },
- 
+  solarpanel:  { name:'Solar Panel', mass:0.5, color:'#2030a0', edge:'#101040', desc:'Generates power in sunlight (Cosmetic)' },
 };
 
 let gameMode = 'build';
@@ -448,6 +445,8 @@ let stars = [], clouds = [];
 let time = 0;
 let debris = []; 
 let nextDisconnectorId = 1;
+let camSmooth = 0;
+let mouseDownClientX = 0, mouseDownClientY = 0;
 
 let currentTab = 'parts';
 let gameVersion = 'LIVE';
@@ -467,7 +466,6 @@ for (let i = 0; i < 500; i++) stars.push({ x:(Math.random()-0.5)*800, y:3500+Mat
 for (let i = 0; i < 70; i++) clouds.push({ x:(Math.random()-0.5)*500, y:200+Math.random()*2500, w:5+Math.random()*10, h:1.2+Math.random()*1.5, drift:(Math.random()-0.5)*0.3 });
 
 const player = { x: 4, y: 18, vx: 0, vy: 0, size: 0.7, onGround: false, inWater: false, inVehicle: null, facing: 1, walkPhase: 0 };
-
 
 let net = {
   peer: null,
@@ -937,6 +935,8 @@ canvas.addEventListener('mousemove', e => {
 
 canvas.addEventListener('mousedown', e => {
   e.preventDefault();
+  mouseDownClientX = e.clientX;
+  mouseDownClientY = e.clientY;
   if (gameMode === 'build') {
     if (e.button === 0) {
       if (selectedPart === 'connector') {
@@ -959,6 +959,8 @@ canvas.addEventListener('mousedown', e => {
 window.addEventListener('mouseup', e => {
   e.preventDefault();
   if (gameMode === 'build') {
+    const dragged = Math.hypot(e.clientX - mouseDownClientX, e.clientY - mouseDownClientY) > 5;
+    
     if (e.button === 0 && isDragging) {
       const minX = Math.min(dragStart.x, mouse.gx);
       const maxX = Math.max(dragStart.x, mouse.gx);
@@ -998,6 +1000,21 @@ window.addEventListener('mouseup', e => {
       }
       isDraggingDel = false;
     }
+  }
+  
+  if (draggingPrefab && gameMode === 'build') {
+    const rect = canvas.getBoundingClientRect();
+    if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+      for (const p of draggingPrefab.parts) {
+        const newPart = vehicle.addPart(p.type, mouse.gx + p.gx, mouse.gy + p.gy, p.rot);
+        if (newPart || p.hotkey) {
+           const placed = vehicle.parts.find(pt => pt.gx === mouse.gx + p.gx && pt.gy === mouse.gy + p.gy);
+           if (placed && p.hotkey) placed.hotkey = p.hotkey;
+        }
+      }
+      showToast("Placed " + draggingPrefab.name);
+    }
+    draggingPrefab = null;
   }
 });
 
@@ -1104,6 +1121,10 @@ window.setDragMode = function(m) {
   leftClickMode = m;
   document.getElementById('mode-place')?.classList.toggle('active', m === 'place');
   document.getElementById('mode-delete')?.classList.toggle('active', m === 'delete');
+};
+
+window.setCamSmooth = function(val) {
+  camSmooth = val / 100;
 };
 
 window.startGame = function() {
@@ -1376,23 +1397,6 @@ document.getElementById('save-prefab-btn').addEventListener('click', () => {
   localStorage.setItem('vfk_prefabs', JSON.stringify(prefabs));
   renderPrefabs();
   showToast("Prefab Saved!");
-});
-
-window.addEventListener('mouseup', e => {
-  if (draggingPrefab && gameMode === 'build') {
-    const rect = canvas.getBoundingClientRect();
-    if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
-      for (const p of draggingPrefab.parts) {
-        const newPart = vehicle.addPart(p.type, mouse.gx + p.gx, mouse.gy + p.gy, p.rot);
-        if (newPart || p.hotkey) {
-           const placed = vehicle.parts.find(pt => pt.gx === mouse.gx + p.gx && pt.gy === mouse.gy + p.gy);
-           if (placed && p.hotkey) placed.hotkey = p.hotkey;
-        }
-      }
-      showToast("Placed " + draggingPrefab.name);
-    }
-    draggingPrefab = null;
-  }
 });
 
 function enterWorld() {
@@ -1790,13 +1794,15 @@ function drawPartAt(type, x, y, angle, size, def) {
       ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, w*0.4, 0, Math.PI*2); ctx.fill();
       break;
 
+    // lunch: I didn't i just used the template for the model
     // NotZeri: Did you use ai for the Solar Panel model???
+    
     case 'solarpanel':
       // Base plate
       ctx.fillStyle = '#303050'; ctx.strokeStyle = def.edge; ctx.lineWidth = 3;
       ctx.fillRect(-w, -w, w*2, w*2); ctx.strokeRect(-w, -w, w*2, w*2);
       
-      // Solar cells (blue with grid lines)
+      // Solar Panel
       ctx.fillStyle = def.color;
       ctx.fillRect(-w*0.8, -w*0.8, w*1.6, w*1.6);
       
@@ -2006,8 +2012,10 @@ function loop(now) {
 
   if (gameMode === 'play') {
     const target = player.inVehicle ? vehicle.position : player;
-    camera.x += (target.x - camera.x) * 0.08;
-    camera.y += (target.y + 3 - camera.y) * 0.08;
+    
+    const lerp = Math.max(0.01, 1.0 - camSmooth * 0.99);
+    camera.x += (target.x - camera.x) * lerp;
+    camera.y += (target.y + 3 - camera.y) * lerp;
     const tz = Math.max(15, Math.min(45, 30 - (target.y || 0) * 0.002));
     camera.zoom += (tz - camera.zoom) * 0.05;
   } else {
