@@ -7,6 +7,7 @@ NotZeri(ellodeez)
 Tested by:
 cookie(jacob)
 dabritishcamel786
+Clay
 
 
 GUI:
@@ -23,6 +24,8 @@ NotZeri: Solar Panels have been added they are just cosmetics
 NotZeri: Multiplayer!!
 NotZeri: Reset Change log because it's filling up a lot
 -->
+
+
 
 
 <!DOCTYPE html>
@@ -894,8 +897,8 @@ class Vehicle {
         }
         
         if (thrustInput !== 0) {
-           this.velocity.x += fwdX * 120 * thrustInput * dt; 
-           this.velocity.y += fwdY * 120 * thrustInput * dt;
+           this.velocity.x += fwdX * -120 * thrustInput * dt; 
+           this.velocity.y += fwdY * -120 * thrustInput * dt;
         }
         
         const sideX = -s; 
